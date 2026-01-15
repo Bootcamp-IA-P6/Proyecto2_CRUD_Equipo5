@@ -23,6 +23,22 @@ Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/Bootcamp-IA-P6/Proyecto2_CRUD_Equipo5.git
 cd Proyecto2_CRUD_Equipo5
+
+
+# Create virtual environment
+python -m venv venv
+
+
+# Activate virtual environment
+# Windows
+venv\Scripts\activate
+
+
+# Linux / macOS
+source venv/bin/activate
+
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
