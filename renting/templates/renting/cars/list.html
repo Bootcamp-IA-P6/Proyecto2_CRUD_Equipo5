@@ -1,0 +1,17 @@
+{% extends 'renting/base.html' %}
+{% block content %}
+<h2>Coches</h2>
+<table>
+    <tr><th>Matrícula</th><th>Modelo</th><th>Marca</th><th>Precio/día</th></tr>
+    {% for c in cars %}
+    <tr>
+        <td>{{ c.license_plate }}</td>
+        <td>{{ c.car_model.model_name }}</td>
+        <td>{{ c.car_model.brand.name }}</td>
+        <td>{{ c.car_model.daily_price }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">Sin coches</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}
