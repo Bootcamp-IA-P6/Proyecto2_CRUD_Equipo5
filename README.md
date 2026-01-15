@@ -46,10 +46,15 @@ pip install -r requirements.txt
 
 ## 🗄️ Database Setup
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the root directory of the project:
 
 ```env
-DATABASE_URL=mysql://user:password@localhost:3306/renting_db
+DB_NAME=vehicle_rental_db
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_HOST=127.0.0.1
+DB_PORT=3306
+
 SECRET_KEY=your-secret-key-here
 DEBUG=True
 ```
