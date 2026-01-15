@@ -1,0 +1,13 @@
+{% extends 'renting/base.html' %}
+{% block content %}
+<h2>Dashboard</h2>
+<ul>
+    <li>Usuarios: {{ total_users }}</li>
+    <li>Coches: {{ total_cars }}</li>
+    <li>Reservas: {{ total_reservations }}</li>
+</ul>
+
+<a href="{% url 'user_list' %}" class="btn">Ver usuarios</a>
+<a href="{% url 'car_list' %}" class="btn">Ver coches</a>
+<a href="{% url 'reservation_list' %}" class="btn">Ver reservas</a>
+{% endblock %}
