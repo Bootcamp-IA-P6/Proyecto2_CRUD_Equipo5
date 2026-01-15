@@ -69,6 +69,7 @@ class CarModelSerializer(serializers.ModelSerializer):
         model = CarModel
         fields = '__all__'
 
+
     # VALIDACIÓN: El precio no puede ser negativo
     def validate_daily_price(self, value):
         if value < 0:
@@ -84,6 +85,8 @@ class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = '__all__'
+    
+    # (Aquí ya no hace falta el validate_price porque el precio está en CarModel)
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -113,4 +116,4 @@ class ReservationSerializer(serializers.ModelSerializer):
     def validate_total_price(self, value):
         if value is not None and value <= 0:
             raise serializers.ValidationError("El precio total debe ser mayor que cero.")
-        return value
+        return value 

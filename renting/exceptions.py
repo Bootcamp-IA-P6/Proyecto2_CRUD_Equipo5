@@ -13,7 +13,7 @@ def custom_exception_handler(exc, context):
             'message': 'Error interno en el servidor del Equipo 5.'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    # Si hay respuesta, le damos nuestro formato
+    # Para unificar el formato de todos los errores (400, 401, 404, etc.)
     return Response({
         'error': 'Client Error',
         'status_code': response.status_code,
