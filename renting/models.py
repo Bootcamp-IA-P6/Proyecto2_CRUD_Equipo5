@@ -4,8 +4,9 @@ class AppUser(models.Model):
     first_name = models.CharField(max_length=100)
     last_name  = models.CharField(max_length=100)
     email      = models.EmailField(max_length=150, unique=True)
-    birth_date = models.DateField(null=True, blank=True)
-    license_number = models.CharField(max_length=50, blank=True)
+    password   = models.CharField(max_length=255)  
+    birth_date = models.DateField()                 
+    license_number = models.CharField(max_length=50)  
 
     class Meta:
         db_table = 'app_user'
@@ -97,7 +98,6 @@ class Reservation(models.Model):
     start_date   = models.DateField()
     end_date     = models.DateField()
     coverage     = models.CharField(max_length=100, blank=True)
-    fuel_policy  = models.CharField(max_length=50, blank=True)
     rate         = models.DecimalField(max_digits=5, decimal_places=2, default=1.00)
     total_price  = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     user         = models.ForeignKey(AppUser, on_delete=models.CASCADE)
