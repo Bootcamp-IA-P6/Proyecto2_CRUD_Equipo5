@@ -47,8 +47,9 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Para pruebas
-    ]
+        'rest_framework.permissions.AllowAny',
+    ],
+    'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler', # <--- Añade esta línea
 }
 
 MIDDLEWARE = [
