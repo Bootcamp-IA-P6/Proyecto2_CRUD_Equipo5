@@ -1,15 +1,27 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from django.db.models import Q
+from django.contrib.auth.hashers import make_password, check_password
 
 class AppUser(models.Model):
-    first_name = models.CharField(max_length=100)
-    last_name  = models.CharField(max_length=100)
-    email      = models.EmailField(max_length=150, unique=True)
-    password   = models.CharField(max_length=255)  
-    birth_date = models.DateField()                 
-    license_number = models.CharField(max_length=50)  
+    first_name      = models.CharField(max_length=100)
+    last_name       = models.CharField(max_length=100)
+    email           = models.EmailField(max_length=150, unique=True)
+    password        = models.CharField(max_length=128)  # ✅ NUEVO
+    birth_date      = models.DateField(null=True, blank=True)
+    license_number  = models.CharField(max_length=50, blank=True)
 
     class Meta:
         db_table = 'app_user'
+
+    def set_password(self, raw_password):
+        """Hash password antes de guardar"""
+        self.password = make_password(raw_password)
+
+    def check_password(self, raw_password):
+        """Verificar password"""
+        return check_password(raw_password, self.password)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
@@ -108,3 +120,27 @@ class Reservation(models.Model):
 
     def __str__(self):
         return f"Reserva {self.id} - {self.user}"
+
+    def clean(self):
+        # 1) start_date <= end_date
+        if self.start_date and self.end_date and self.start_date > self.end_date:
+            raise ValidationError({
+                "end_date": _("La fecha de fin debe ser igual o posterior a la fecha de inicio.")
+            })
+
+        # 2) evitar solapes para el mismo coche
+        if self.start_date and self.end_date and self.car_id:
+            overlapping = Reservation.objects.filter(
+                car=self.car,
+                start_date__lte=self.end_date,
+                end_date__gte=self.start_date,
+            )
+
+            # excluirse a sí misma en updates
+            if self.pk:
+                overlapping = overlapping.exclude(pk=self.pk)
+
+            if overlapping.exists():
+                raise ValidationError(
+                    _("Las fechas seleccionadas se solapan con otra reserva para este vehículo.")
+                )

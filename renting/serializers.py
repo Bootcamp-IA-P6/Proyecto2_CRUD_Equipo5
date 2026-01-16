@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.core.exceptions import ValidationError 
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
     CarModel, Car, Reservation
@@ -7,7 +8,25 @@ from .models import (
 class AppUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppUser
-        fields = '__all__'
+        fields = ['id', 'first_name', 'last_name', 'email', 'birth_date', 'license_number']
+        # ✅ password EXCLUIDO, manejado en create/update
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = AppUser.objects.create_user(
+            **validated_data, 
+            password=password  # ✅ Hash automático
+        )
+        return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        super().update(instance, validated_data)
+        if password:
+            instance.set_password(password)
+            instance.save()
+        return instance
 
 
 class VehicleTypeSerializer(serializers.ModelSerializer):
@@ -74,7 +93,21 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Reservation
-        fields = '__all__'
+        fields = [
+            'id', 'start_date', 'end_date', 'coverage', 'rate', 
+            'total_price', 'user', 'car', 
+            'user_name', 'car_license', 'model_name'
+        ]
+        # ✅ fuel_policy EXCLUIDO explícitamente
+
+    def validate(self, attrs):
+        instance = getattr(self, 'instance', None)
+        instance = instance or Reservation(**attrs)  
+        try:
+            instance.full_clean()
+        except ValidationError as e:
+            raise serializers.ValidationError(e.message_dict)
+        return attrs
 
     # VALIDACIÓN: El total de la reserva debe ser positivo
     def validate_total_price(self, value):
