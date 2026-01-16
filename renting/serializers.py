@@ -69,6 +69,12 @@ class CarModelSerializer(serializers.ModelSerializer):
         model = CarModel
         fields = '__all__'
 
+    # VALIDACIÓN: El precio no puede ser negativo
+    def validate_daily_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("El precio diario no puede ser negativo.")
+        return value
+
 
 class CarSerializer(serializers.ModelSerializer):
     car_model_name = serializers.CharField(source='car_model.model_name', read_only=True)
@@ -96,10 +102,15 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         instance = getattr(self, 'instance', None)
-        instance = instance or Reservation(**attrs)
-        
+        instance = instance or Reservation(**attrs)  
         try:
             instance.full_clean()
         except ValidationError as e:
             raise serializers.ValidationError(e.message_dict)
         return attrs
+
+    # VALIDACIÓN: El total de la reserva debe ser positivo
+    def validate_total_price(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("El precio total debe ser mayor que cero.")
+        return value
