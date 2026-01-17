@@ -8,24 +8,29 @@ from .models import (
 class AppUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppUser
-        fields = ['id', 'first_name', 'last_name', 'email', 'birth_date', 'license_number']
-        # ✅ password EXCLUIDO, manejado en create/update
+        # 1. Agregamos 'password' a la lista de campos para que DRF lo reciba
+        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'birth_date', 'license_number']
+        # ✅ write_only asegura que se pueda enviar pero nunca se vea en la respuesta
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = AppUser.objects.create_user(
-            **validated_data, 
-            password=password  # ✅ Hash automático
-        )
+        # 2. Usamos .pop con un valor por defecto para evitar el KeyError
+        password = validated_data.pop('password', None)
+        # Creamos el usuario (usamos create porque tu modelo no es el User de Django, es el tuyo)
+        user = AppUser.objects.create(**validated_data) 
+        
+        if password:
+            user.set_password(password)
+            user.save()
         return user
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
-        super().update(instance, validated_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         if password:
             instance.set_password(password)
-            instance.save()
+        instance.save()
         return instance
 
 
