@@ -8,24 +8,29 @@ from .models import (
 class AppUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppUser
-        fields = ['id', 'first_name', 'last_name', 'email', 'birth_date', 'license_number']
-        # ✅ password EXCLUIDO, manejado en create/update
+        # 1. Agregamos 'password' a la lista de campos para que DRF lo reciba
+        fields = ['id', 'first_name', 'last_name', 'email', 'password', 'birth_date', 'license_number']
+        # ✅ write_only asegura que se pueda enviar pero nunca se vea en la respuesta
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = AppUser.objects.create_user(
-            **validated_data, 
-            password=password  # ✅ Hash automático
-        )
+        # 2. Usamos .pop con un valor por defecto para evitar el KeyError
+        password = validated_data.pop('password', None)
+        # Creamos el usuario (usamos create porque tu modelo no es el User de Django, es el tuyo)
+        user = AppUser.objects.create(**validated_data) 
+        
+        if password:
+            user.set_password(password)
+            user.save()
         return user
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
-        super().update(instance, validated_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
         if password:
             instance.set_password(password)
-            instance.save()
+        instance.save()
         return instance
 
 
@@ -69,6 +74,7 @@ class CarModelSerializer(serializers.ModelSerializer):
         model = CarModel
         fields = '__all__'
 
+
     # VALIDACIÓN: El precio no puede ser negativo
     def validate_daily_price(self, value):
         if value < 0:
@@ -84,6 +90,8 @@ class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = '__all__'
+    
+    # (Aquí ya no hace falta el validate_price porque el precio está en CarModel)
 
 
 class ReservationSerializer(serializers.ModelSerializer):
@@ -113,4 +121,4 @@ class ReservationSerializer(serializers.ModelSerializer):
     def validate_total_price(self, value):
         if value is not None and value <= 0:
             raise serializers.ValidationError("El precio total debe ser mayor que cero.")
-        return value
+        return value 

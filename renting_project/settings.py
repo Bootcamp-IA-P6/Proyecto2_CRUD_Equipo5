@@ -49,7 +49,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
-    'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler', # <--- Añade esta línea
+    'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler',
 }
 
 MIDDLEWARE = [
