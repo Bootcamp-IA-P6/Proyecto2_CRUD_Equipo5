@@ -50,6 +50,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler',
+    # --- AQUÍ AÑADIMOS LA PAGINACIÓN ---
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
 MIDDLEWARE = [

@@ -4,6 +4,7 @@ from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
     CarModel, Car, Reservation
 )
+from .pagination import StandardResultsSetPagination
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ from .serializers import (
 class AppUserViewSet(viewsets.ModelViewSet):
     queryset = AppUser.objects.all()
     serializer_class = AppUserSerializer
+    pagination_class = StandardResultsSetPagination
 
     def perform_create(self, serializer):
         user = serializer.save()
@@ -82,6 +84,7 @@ class CarModelViewSet(viewsets.ModelViewSet):
 class CarViewSet(viewsets.ModelViewSet):
     queryset = Car.objects.select_related('car_model', 'car_model__brand', 'color').all()
     serializer_class = CarSerializer
+    pagination_class = StandardResultsSetPagination
 
     def perform_create(self, serializer):
         car = serializer.save()
@@ -96,6 +99,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         'user', 'car', 'car__car_model', 'car__car_model__brand'
     ).all()
     serializer_class = ReservationSerializer
+    pagination_class = StandardResultsSetPagination
 
     def perform_create(self, serializer):
         reservation = serializer.save()
