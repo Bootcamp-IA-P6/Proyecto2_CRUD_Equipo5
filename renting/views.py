@@ -46,7 +46,6 @@ from .serializers import (
 class AppUserViewSet(viewsets.ModelViewSet):
     queryset = AppUser.objects.all()
     serializer_class = AppUserSerializer
-    pagination_class = StandardResultsSetPagination
     permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
     def perform_create(self, serializer):
@@ -98,7 +97,6 @@ class CarModelViewSet(viewsets.ModelViewSet):
 class CarViewSet(viewsets.ModelViewSet):
     queryset = Car.objects.select_related('car_model', 'car_model__brand', 'color').all()
     serializer_class = CarSerializer
-    pagination_class = StandardResultsSetPagination
     permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
     def perform_create(self, serializer):
@@ -114,7 +112,6 @@ class ReservationViewSet(viewsets.ModelViewSet):
         'user', 'car', 'car__car_model', 'car__car_model__brand'
     ).all()
     serializer_class = ReservationSerializer
-    pagination_class = StandardResultsSetPagination
     permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
     def perform_create(self, serializer):

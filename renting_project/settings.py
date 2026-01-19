@@ -56,7 +56,7 @@ REST_FRAMEWORK = {
     ],
     'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler',
     # --- AQUÍ AÑADIMOS LA PAGINACIÓN ---
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'renting.pagination.StandardResultsSetPagination',
     'PAGE_SIZE': 10,
 }
 
