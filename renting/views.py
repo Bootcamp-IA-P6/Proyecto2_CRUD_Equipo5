@@ -7,6 +7,7 @@ from .models import (
 
 logger = logging.getLogger(__name__)
 
+# Vistas HTML (sin cambios)
 def home(request):
     logger.info("Home page accessed")
     return render(request, 'renting/home.html', {
@@ -20,21 +21,21 @@ def user_list(request):
     users = AppUser.objects.all()
     return render(request, 'renting/users/list.html', {'users': users})
 
-
 def car_list(request):
     logger.info("Car list page accessed")
     cars = Car.objects.select_related('car_model', 'car_model__brand').all()
     return render(request, 'renting/cars/list.html', {'cars': cars})
-
 
 def reservation_list(request):
     logger.info("Reservation list page accessed")
     reservations = Reservation.objects.select_related('user', 'car', 'car__car_model').all()
     return render(request, 'renting/reservations/list.html', {'reservations': reservations})
 
-#API Views
-
-from rest_framework import viewsets
+# API Views con JWT
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .serializers import (
     AppUserSerializer, VehicleTypeSerializer, BrandSerializer,
     FuelTypeSerializer, ColorSerializer, TransmissionSerializer,
@@ -44,6 +45,7 @@ from .serializers import (
 class AppUserViewSet(viewsets.ModelViewSet):
     queryset = AppUser.objects.all()
     serializer_class = AppUserSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
     def perform_create(self, serializer):
         user = serializer.save()
@@ -53,35 +55,48 @@ class AppUserViewSet(viewsets.ModelViewSet):
         logger.info(f"User deleted: {instance.email}")
         instance.delete()
 
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        """Endpoint para obtener datos del usuario logueado"""
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
 class VehicleTypeViewSet(viewsets.ModelViewSet):
     queryset = VehicleType.objects.all()
     serializer_class = VehicleTypeSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
 class FuelTypeViewSet(viewsets.ModelViewSet):
     queryset = FuelType.objects.all()
     serializer_class = FuelTypeSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
 class ColorViewSet(viewsets.ModelViewSet):
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
 class TransmissionViewSet(viewsets.ModelViewSet):
     queryset = Transmission.objects.all()
     serializer_class = TransmissionSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
 class CarModelViewSet(viewsets.ModelViewSet):
     queryset = CarModel.objects.select_related(
         'brand', 'vehicle_type', 'fuel_type', 'transmission'
     ).all()
     serializer_class = CarModelSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
 class CarViewSet(viewsets.ModelViewSet):
     queryset = Car.objects.select_related('car_model', 'car_model__brand', 'color').all()
     serializer_class = CarSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
     def perform_create(self, serializer):
         car = serializer.save()
@@ -96,6 +111,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         'user', 'car', 'car__car_model', 'car__car_model__brand'
     ).all()
     serializer_class = ReservationSerializer
+    permission_classes = [IsAuthenticated]  # ✅ PROTEGIDO
 
     def perform_create(self, serializer):
         reservation = serializer.save()
