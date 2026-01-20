@@ -144,3 +144,34 @@ class Reservation(models.Model):
                 raise ValidationError(
                     _("Las fechas seleccionadas se solapan con otra reserva para este vehículo.")
                 )
+            
+    # 1. 자동 계산 메서드
+    def calculate_details(self):
+        from datetime import date
+        from decimal import Decimal
+        
+        # 나이 계산
+        today = date.today()
+        birth = self.user.birth_date
+        age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+
+        # 커버리지 및 계수 결정
+        if age < 25:
+            self.coverage = "Young Driver"
+            self.rate = Decimal('1.50')
+        elif age <= 65:
+            self.coverage = "Standard"
+            self.rate = Decimal('1.00')
+        else:
+            self.coverage = "Senior/Premium"
+            self.rate = Decimal('1.20')
+
+        # 기간 및 총액 계산
+        duration = (self.end_date - self.start_date).days + 1
+        daily_price = self.car.car_model.daily_price
+        self.total_price = Decimal(duration) * daily_price * self.rate
+
+    # 2. 저장 시 자동 실행
+    def save(self, *args, **kwargs):
+        self.calculate_details()
+        super().save(*args, **kwargs)
