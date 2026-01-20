@@ -1,13 +1,39 @@
 {% extends 'renting/base.html' %}
-{% block content %}
-<h2>Dashboard</h2>
-<ul>
-    <li>Usuarios: {{ total_users }}</li>
-    <li>Coches: {{ total_cars }}</li>
-    <li>Reservas: {{ total_reservations }}</li>
-</ul>
 
-<a href="{% url 'user_list' %}" class="btn">Ver usuarios</a>
-<a href="{% url 'car_list' %}" class="btn">Ver coches</a>
-<a href="{% url 'reservation_list' %}" class="btn">Ver reservas</a>
+{% block content %}
+<div class="mb-4">
+    <h2>Vehicle Rental Management System</h2>
+    <p class="text-muted">
+        This project is a backend-focused vehicle rental system built with
+        Django and Django REST Framework.  
+        It demonstrates RESTful API design, authentication with JWT,
+        business logic handling, and a basic web interface.
+    </p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Project Structure</h5>
+        <ul class="mb-0">
+            <li><strong>API Layer:</strong> RESTful endpoints for users, cars, and reservations</li>
+            <li><strong>Authentication:</strong> JWT-based authentication for protected resources</li>
+            <li><strong>Business Logic:</strong> Automated pricing and validation rules</li>
+            <li><strong>Web Interface:</strong> Django templates with Fetch-based API integration</li>
+        </ul>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Available Sections</h5>
+        <p class="mb-2 text-muted">
+            The following sections are available through the web interface:
+        </p>
+        <div class="d-flex gap-2">
+            <a href="{% url 'user_list' %}" class="btn btn-outline-primary">Users</a>
+            <a href="{% url 'car_list' %}" class="btn btn-outline-primary">Cars</a>
+            <a href="{% url 'reservation_list' %}" class="btn btn-outline-primary">Reservations</a>
+        </div>
+    </div>
+</div>
 {% endblock %}
