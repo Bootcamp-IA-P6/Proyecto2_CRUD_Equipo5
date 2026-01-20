@@ -205,3 +205,5 @@ class Reservation(models.Model):
     def save(self, *args, **kwargs):
         self.calculate_details()
         super().save(*args, **kwargs)
+
+# temp change to trigger git

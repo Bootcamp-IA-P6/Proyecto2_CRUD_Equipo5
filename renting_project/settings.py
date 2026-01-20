@@ -176,3 +176,5 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,  # reutilizamos la SECRET_KEY de Django
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# temp change to trigger git
