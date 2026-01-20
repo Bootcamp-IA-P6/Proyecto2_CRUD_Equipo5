@@ -142,3 +142,5 @@ def register_view(request):
 
 def reservation_create(request):
     return render(request, 'renting/reservations/create.html')
+
+# temp change to trigger git

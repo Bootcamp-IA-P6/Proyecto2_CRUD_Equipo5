@@ -20,3 +20,4 @@ urlpatterns = [
     # HTML templates + API (SOLO UN include)
     path('', include('renting.urls')),
 ]
+# temp change to trigger git
