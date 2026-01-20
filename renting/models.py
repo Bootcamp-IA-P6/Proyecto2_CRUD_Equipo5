@@ -25,6 +25,36 @@ class AppUser(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+    
+    # JWT/Django 인증 호환을 위한 필수 속성
+    @property
+    def is_authenticated(self): return True
+    @property
+    def is_active(self): return True
+    @property
+    def is_anonymous(self): return False
+
+    # [추가] Admin 접속을 위해 필요한 속성
+    @property
+    def is_staff(self):
+        # 모든 유저에게 어드민 접속 권한을 주려면 True
+        # 특정 유저만 주고 싶다면 DB에 필드를 추가해야 하지만, 지금은 테스트를 위해 True로 설정합니다.
+        return True
+
+    # [추가] 권한 체크 메서드 (Admin 작동을 위해 필수)
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
+    
+    # SimpleJWT는 'id' 필드명을 기준으로 토큰을 만듭니다
+    @property
+    def id(self): return self.pk
+    
+    # Django 인증 시스템이 요구하는 식별자
+    USERNAME_FIELD = 'email' 
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
 
 class VehicleType(models.Model):

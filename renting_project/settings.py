@@ -52,7 +52,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler',
 }
@@ -123,6 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'renting.AppUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
