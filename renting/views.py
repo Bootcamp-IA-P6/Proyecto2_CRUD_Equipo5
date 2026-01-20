@@ -4,6 +4,7 @@ from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
     CarModel, Car, Reservation
 )
+from .pagination import StandardResultsSetPagination
 
 logger = logging.getLogger(__name__)
 
