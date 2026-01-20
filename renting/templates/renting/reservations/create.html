@@ -1,0 +1,28 @@
+{% extends 'renting/base.html' %}
+{% block content %}
+<div class="card shadow p-4 mx-auto" style="max-width: 600px;">
+    <h2>New Reservation</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label>Select Car</label>
+            <select name="car" class="form-select" required>
+                {% for car in cars %}
+                <option value="{{ car.id }}">{{ car.car_model.model_name }} ({{ car.license_plate }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>Start Date</label>
+                <input type="date" name="start_date" class="form-control" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>End Date</label>
+                <input type="date" name="end_date" class="form-control" required>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Create Reservation</button>
+    </form>
+</div>
+{% endblock %}

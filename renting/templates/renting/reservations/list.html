@@ -1,22 +1,28 @@
+<!-- templates/renting/reservations/list.html -->
 {% extends 'renting/base.html' %}
 {% block content %}
-<h2>Reservas</h2>
-<table>
-    <tr>
-        <th>ID</th><th>Usuario</th><th>Coche</th>
-        <th>Inicio</th><th>Fin</th><th>Total</th>
-    </tr>
-    {% for r in reservations %}
-    <tr>
-        <td>{{ r.id }}</td>
-        <td>{{ r.user.first_name }} {{ r.user.last_name }}</td>
-        <td>{{ r.car.license_plate }} ({{ r.car.car_model.model_name }})</td>
-        <td>{{ r.start_date }}</td>
-        <td>{{ r.end_date }}</td>
-        <td>{{ r.total_price }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="6">Sin reservas</td></tr>
-    {% endfor %}
-</table>
+<div class="card shadow-sm p-4">
+    <h2>Reservations</h2> <a href="{% url 'reservation_create' %}">Create Reservation</a>
+    <table class="table table-striped mt-3">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th><th>User</th><th>Car</th><th>Start</th><th>End</th><th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in reservations %}
+            <tr>
+                <td>{{ r.id }}</td>
+                <td>{{ r.user.first_name }} {{ r.user.last_name }}</td>
+                <td>{{ r.car.license_plate }} ({{ r.car.car_model.model_name }})</td>
+                <td>{{ r.start_date }}</td>
+                <td>{{ r.end_date }}</td>
+                <td class="text-primary fw-bold">{{ r.total_price }} €</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center">No reservations found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
