@@ -106,19 +106,22 @@ class ReservationSerializer(serializers.ModelSerializer):
             'total_price', 'user', 'car', 
             'user_name', 'car_license', 'model_name'
         ]
-        # ✅ fuel_policy EXCLUIDO explícitamente
+        # ✅ Logic-calculated fields are Read Only to prevent manual input
+        read_only_fields = ['coverage', 'rate', 'total_price']
 
     def validate(self, attrs):
+        # We need to access the user and car objects to run full_clean during validation
+        # because the price logic depends on them.
         instance = getattr(self, 'instance', None)
-        instance = instance or Reservation(**attrs)  
+        if instance:
+            for attr, value in attrs.items():
+                setattr(instance, attr, value)
+        else:
+            instance = Reservation(**attrs)
+        
         try:
+            # full_clean() calls the model's clean() method
             instance.full_clean()
         except ValidationError as e:
             raise serializers.ValidationError(e.message_dict)
         return attrs
-
-    # VALIDACIÓN: El total de la reserva debe ser positivo
-    def validate_total_price(self, value):
-        if value is not None and value <= 0:
-            raise serializers.ValidationError("El precio total debe ser mayor que cero.")
-        return value 
