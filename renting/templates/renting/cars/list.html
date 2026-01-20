@@ -1,17 +1,43 @@
+<!-- templates/renting/cars/list.html -->
 {% extends 'renting/base.html' %}
 {% block content %}
-<h2>Coches</h2>
-<table>
-    <tr><th>Matrícula</th><th>Modelo</th><th>Marca</th><th>Precio/día</th></tr>
-    {% for c in cars %}
-    <tr>
-        <td>{{ c.license_plate }}</td>
-        <td>{{ c.car_model.model_name }}</td>
-        <td>{{ c.car_model.brand.name }}</td>
-        <td>{{ c.car_model.daily_price }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="4">Sin coches</td></tr>
-    {% endfor %}
-</table>
+<div class="card shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Available Vehicles</h2>
+        <span class="badge bg-primary">{{ cars|length }} Cars found</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Brand</th>
+                    <th>Model</th>
+                    <th>License Plate</th>
+                    <th>Color</th>
+                    <th>Mileage</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for car in cars %}
+                <tr>
+                    <td><strong>{{ car.car_model.brand.name }}</strong></td>
+                    <td>{{ car.car_model.model_name }}</td>
+                    <td><span class="badge bg-secondary text-uppercase">{{ car.license_plate }}</span></td>
+                    <td>{{ car.color.name|default:"-" }}</td>
+                    <td>{{ car.mileage|default:0 }} km</td>
+                    <td>
+                        <a href="#" class="btn btn-outline-primary btn-sm">View Details</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-muted">No vehicles available at the moment.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
