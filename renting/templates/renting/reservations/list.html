@@ -1,28 +1,49 @@
-<!-- templates/renting/reservations/list.html -->
 {% extends 'renting/base.html' %}
 {% block content %}
 <div class="card shadow-sm p-4">
-    <h2>Reservations</h2> <a href="{% url 'reservation_create' %}">Create Reservation</a>
-    <table class="table table-striped mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Reservations</h2>
+        <a href="{% url 'reservation_create' %}" class="btn btn-primary btn-sm">Create Reservation</a>
+    </div>
+    <table class="table table-striped">
         <thead class="table-dark">
             <tr>
-                <th>ID</th><th>User</th><th>Car</th><th>Start</th><th>End</th><th>Price</th>
+                <th>ID</th><th>User</th><th>Car (Model)</th><th>Start</th><th>End</th><th>Price</th>
             </tr>
         </thead>
-        <tbody>
-            {% for r in reservations %}
-            <tr>
-                <td>{{ r.id }}</td>
-                <td>{{ r.user.first_name }} {{ r.user.last_name }}</td>
-                <td>{{ r.car.license_plate }} ({{ r.car.car_model.model_name }})</td>
-                <td>{{ r.start_date }}</td>
-                <td>{{ r.end_date }}</td>
-                <td class="text-primary fw-bold">{{ r.total_price }} €</td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="6" class="text-center">No reservations found.</td></tr>
-            {% endfor %}
+        <tbody id="res-list-body">
+            <!-- JS가 채워넣을 자리 -->
         </tbody>
     </table>
 </div>
+
+<script>
+    async function loadReservations() {
+        const response = await fetchWithAuth('/api/reservations/'); // URL 경로 확인 필요
+        if (!response) return;
+
+        const data = await response.json();
+        console.log(data);
+        const items = Array.isArray(data) ? data : (data.results || []);
+        
+        const tbody = document.getElementById('res-list-body');
+        if (items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No reservations found.</td></tr>';
+            return;
+        } else {
+            tbody.innerHTML = items.map(r => `
+                <tr>
+                    <td>${r.id}</td>
+                    <td>${r.user_name}</td>
+                    <td>${r.car_license} (${r.model_name})</td>
+                    <td>${r.start_date}</td>
+                    <td>${r.end_date}</td>
+                    <td class="text-primary fw-bold">${r.total_price} €</td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadReservations);
+</script>
 {% endblock %}
