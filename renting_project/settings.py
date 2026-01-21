@@ -52,7 +52,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler',
     # --- AQUÍ AÑADIMOS LA PAGINACIÓN ---
@@ -126,6 +126,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'renting.AppUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -178,3 +179,5 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,  # reutilizamos la SECRET_KEY de Django
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
+
+# temp change to trigger git

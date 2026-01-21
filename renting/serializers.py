@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError 
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
@@ -123,5 +125,6 @@ class ReservationSerializer(serializers.ModelSerializer):
             # full_clean() calls the model's clean() method
             instance.full_clean()
         except ValidationError as e:
+            # 장고 모델 에러를 DRF 에러로 변환
             raise serializers.ValidationError(e.message_dict)
         return attrs
