@@ -108,57 +108,23 @@ class ReservationSerializer(serializers.ModelSerializer):
             'total_price', 'user', 'car', 
             'user_name', 'car_license', 'model_name'
         ]
-        read_only_fields = ['user', 'coverage', 'rate', 'total_price']
+        # ✅ Logic-calculated fields are Read Only to prevent manual input
+        read_only_fields = ['coverage', 'rate', 'total_price']
 
     def validate(self, attrs):
-        # 1. 현재 요청을 보낸 유저 정보를 가져옵니다.
-        request = self.context.get('request')
-        user = request.user if request else None
-
-        # 2. 검증용 임시 인스턴스를 만들 때 유저 정보를 포함시킵니다.
-        # (이렇게 해야 full_clean()이 '유저가 없네?'라고 화내지 않습니다.)
+        # We need to access the user and car objects to run full_clean during validation
+        # because the price logic depends on them.
         instance = getattr(self, 'instance', None)
         if instance:
             for attr, value in attrs.items():
                 setattr(instance, attr, value)
         else:
-            instance = Reservation(user=user, **attrs)
-
+            instance = Reservation(**attrs)
+        
         try:
+            # full_clean() calls the model's clean() method
             instance.full_clean()
         except ValidationError as e:
             # 장고 모델 에러를 DRF 에러로 변환
             raise serializers.ValidationError(e.message_dict)
-            
         return attrs
-
-    # VALIDACIÓN: El total de la reserva debe ser positivo
-    def validate_total_price(self, value):
-        if value is not None and value <= 0:
-            raise serializers.ValidationError("El precio total debe ser mayor que cero.")
-        return value 
-
-class MyTokenObtainPairSerializer(serializers.Serializer):
-    username = serializers.EmailField() # JS의 username 키 대응
-    password = serializers.CharField(write_only=True)
-
-    def validate(self, attrs):
-        email = attrs.get("username")
-        password = attrs.get("password")
-
-        try:
-            user = AppUser.objects.get(email=email)
-        except AppUser.DoesNotExist:
-            raise serializers.ValidationError("No user found with this email.")
-
-        if not user.check_password(password):
-            raise serializers.ValidationError("Incorrect password.")
-
-        # 인증 성공 시 수동으로 토큰 생성
-        refresh = RefreshToken.for_user(user)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
-
-# temp change to trigger git
