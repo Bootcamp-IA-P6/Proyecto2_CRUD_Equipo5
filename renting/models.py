@@ -2,7 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.contrib.auth.hashers import make_password, check_password
 
 # for superuser creation
@@ -24,10 +24,12 @@ class AppUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, first_name, last_name, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True) # 슈퍼유저는 스태프 권한 가짐
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True) # 슈퍼유저 권한 추가
         return self.create_user(email, first_name, last_name, password, **extra_fields)
+
     
-class AppUser(AbstractBaseUser):
+class AppUser(AbstractBaseUser, PermissionsMixin): 
     first_name      = models.CharField(max_length=100)
     last_name       = models.CharField(max_length=100)
     email           = models.EmailField(max_length=150, unique=True)
@@ -38,46 +40,22 @@ class AppUser(AbstractBaseUser):
     is_staff        = models.BooleanField(default=False)
     last_login      = models.DateTimeField(null=True, blank=True)
 
+    objects = AppUserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+
     class Meta:
         db_table = 'app_user'
 
     def set_password(self, raw_password):
-        """Hash password antes de guardar"""
         self.password = make_password(raw_password)
 
     def check_password(self, raw_password):
-        """Verificar password"""
         return check_password(raw_password, self.password)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-    
-    # JWT/Django 인증 호환을 위한 필수 속성
-    @property
-    def is_authenticated(self): return True
-    # @property
-    # def is_active(self): return True
-    # @property
-    # def is_staff(self): return True
-    @property
-    def is_anonymous(self): return False
-
-    # admin auth check
-    def has_perm(self, perm, obj=None):
-        return self.is_staff
-
-    def has_module_perms(self, app_label):
-        return self.is_staff
-    
-    # SimpleJWT는 'id' 필드명을 기준으로 토큰을 만듭니다
-    @property
-    def id(self): return self.pk
-
-    objects = AppUserManager()
-    
-    # Django 인증 시스템이 요구하는 식별자
-    USERNAME_FIELD = 'email' 
-    REQUIRED_FIELDS = ['first_name', 'last_name']
 
 
 class VehicleType(models.Model):
