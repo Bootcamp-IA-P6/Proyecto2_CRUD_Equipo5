@@ -112,24 +112,24 @@ python manage.py runserver
 
 ---
 
-## 📋 API Endpoints
+## 🚀 API Endpoints Overview
 
-```text
-GET     /api/users/
-POST    /api/users/
-PUT     /api/users/{id}/
-DELETE  /api/users/{id}/
+For detailed request/response examples and JWT authentication flow, please refer to our [Full API Guide](./API_GUIDE.md).
 
-GET     /api/vehicles/
-POST    /api/vehicles/
-PUT     /api/vehicles/{id}/
-DELETE  /api/vehicles/{id}/
+| Category | Method | Endpoint | Auth Required |
+| :--- | :--- | :--- | :--- |
+| **Auth** | POST | `/api/token/` | No |
+| **Users** | POST | `/api/users/` (Registration) | No |
+| | GET | `/api/users/me/` | **Yes** |
+| **Cars** | GET | `/api/cars/` | **Yes** |
+| **Reservations**| GET | `/api/reservations/` | **Yes** |
+| | POST | `/api/reservations/` | **Yes** |
 
-GET     /api/reservations/
-POST    /api/reservations/
-PUT     /api/reservations/{id}/
-DELETE  /api/reservations/{id}/
-```
+### 🔒 Quick Note on Authentication
+1. Login via `/api/token/` to receive an `access` token.
+2. Include the token in the header: `Authorization: Bearer <your_token>`.
+
+For detailed API usage and JWT authentication flow, please refer to the [API_GUIDE.md](./API_GUIDE.md).
 
 ---
 
