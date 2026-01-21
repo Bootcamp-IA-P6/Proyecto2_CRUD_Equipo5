@@ -57,7 +57,7 @@ class AppUser(AbstractBaseUser):
     def is_authenticated(self): return True
     # @property
     # def is_active(self): return True
-    @property
+    # @property
     # def is_staff(self): return True
     @property
     def is_anonymous(self): return False
