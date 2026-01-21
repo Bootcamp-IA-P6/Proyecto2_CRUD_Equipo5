@@ -1,16 +1,53 @@
 {% extends 'renting/base.html' %}
+
 {% block content %}
-<h2>Usuarios</h2>
-<table>
-    <tr><th>ID</th><th>Nombre</th><th>Email</th></tr>
-    {% for u in users %}
-    <tr>
-        <td>{{ u.id }}</td>
-        <td>{{ u.first_name }} {{ u.last_name }}</td>
-        <td>{{ u.email }}</td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="3">Sin usuarios</td></tr>
-    {% endfor %}
-</table>
+<div class="card shadow-sm p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Users</h2>
+    </div>
+
+    <table class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody id="user-list-body">
+            <!-- JS가 채워넣을 자리 -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function loadUsers() {
+        const response = await fetchWithAuth('/api/users/');
+        if (!response) return;
+
+        const data = await response.json();
+        console.log(data);
+
+        // pagination 대응
+        const items = Array.isArray(data) ? data : (data.results || []);
+
+        const tbody = document.getElementById('user-list-body');
+
+        if (items.length === 0) {
+            tbody.innerHTML =
+                '<tr><td colspan="3" class="text-center">No users found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = items.map(u => `
+            <tr>
+                <td>${u.id}</td>
+                <td>${u.first_name} ${u.last_name}</td>
+                <td>${u.email}</td>
+            </tr>
+        `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+</script>
 {% endblock %}

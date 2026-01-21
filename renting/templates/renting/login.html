@@ -2,26 +2,42 @@
 {% extends 'renting/base.html' %}
 {% block content %}
 <div class="card p-4 mx-auto shadow" style="max-width: 400px;">
-    <h3 class="text-center mb-4">Login</h3>
-    <form method="POST">
-        {% csrf_token %}
+    <h3 class="text-center mb-4">Login (JWT)</h3>
+    <form id="login-form">
         <div class="mb-3">
             <label>Email</label>
-            <input type="email" name="email" class="form-control" required>
+            <input type="email" id="email" class="form-control" required>
         </div>
         <div class="mb-3">
             <label>Password</label>
-            <input type="password" name="password" class="form-control" required>
+            <input type="password" id="password" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary w-100">Login</button>
     </form>
 </div>
-{% endblock %}
-{% if success %}
+
 <script>
-    // 서버에서 받은 JWT 토큰을 로컬 스토리지에 저장 (이슈 #28 달성!)
-    localStorage.setItem('tokens', JSON.stringify({ access: "{{ access_token }}" }));
-    alert("Login successful! JWT stored.");
-    window.location.href = "{% url 'home' %}";
+    document.getElementById('login-form').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const payload = {
+            username: document.getElementById('email').value, // JWT 기본 키값
+            password: document.getElementById('password').value
+        };
+
+        const response = await fetch('/api/token/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            Auth.saveTokens(data); // base.html의 Auth 객체 사용
+            window.location.href = "{% url 'home' %}";
+        } else {
+            alert("Login failed. Check your credentials.");
+        }
+    };
 </script>
-{% endif %}
+{% endblock %}

@@ -44,31 +44,58 @@ pip install -r requirements.txt
 
 ---
 
-## 🗄️ Database Setup
+## 🛠 Database Setup & Initialization
+Follow these steps to set up the database schema and load initial sample data.
 
-Create a `.env` file in the root directory of the project:
+### 1. Create Database (Manual Step)
+Before running migrations, you must manually create the database in your MySQL server:
+```sql
+CREATE DATABASE renting_db;
+```
 
+
+### 2. Environment Configuration
+Create a `.env` file in the root directory and configure your credentials:
 ```env
-DB_NAME=vehicle_rental_db
+DB_NAME=renting_db
 DB_USER=root
 DB_PASSWORD=your_mysql_password
 DB_HOST=127.0.0.1
 DB_PORT=3306
 
-SECRET_KEY=your-secret-key-here
+SECRET_KEY=your-django-secret-key
 DEBUG=True
 ```
 
-Run migrations and create the admin user:
 
+### 3. Database Migrations
+Generate and apply the table schema:
 ```bash
-# Run migrations
 python manage.py makemigrations
 python manage.py migrate
+```
 
-# Create admin superuser
+If needed:
+```bash
 python manage.py createsuperuser
 ```
+
+
+### 4. Seeding Sample Data
+Run the custom management command to populate the database with 15 Users, 15 Cars, and 25 Reservations.
+```bash
+python manage.py seed_data
+```
+
+Note:
+- This command ensures all users are created with properly hashed passwords, allowing immediate login via JWT.
+- Reservations are created with automatically calculated prices and coverage levels (Young Driver, Standard, Senior/Premium) based on the users' birth dates.
+
+
+### 5. Default Credentials
+After seeding, you can log in with any of the 15 generated accounts.
+- **Username**: user1@example.com ~ user15@example.com
+- **Password (for all)**: pass1234
 
 ---
 
