@@ -2,35 +2,12 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password, check_password
 from datetime import date
 from decimal import Decimal 
 
 
-# for superuser creation
-class AppUserManager(BaseUserManager):
-    def get_by_natural_key(self, email):
-        return self.get(email=email)
-    
-    def create_user(self, email, first_name, last_name, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Users must have an email address')
-        user = self.model(
-            email=self.normalize_email(email),
-            first_name=first_name,
-            last_name=last_name,
-            **extra_fields
-        )
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, first_name, last_name, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True) # 슈퍼유저는 스태프 권한 가짐
-        return self.create_user(email, first_name, last_name, password, **extra_fields)
-    
-class AppUser(AbstractBaseUser):
+class AppUser(models.Model):
     first_name      = models.CharField(max_length=100)
     last_name       = models.CharField(max_length=100)
     email           = models.EmailField(max_length=150, unique=True)
@@ -38,9 +15,6 @@ class AppUser(AbstractBaseUser):
     # Changed to mandatory for age calculation
     birth_date      = models.DateField(null=False, blank=False) 
     license_number  = models.CharField(max_length=50, blank=True)
-    is_active       = models.BooleanField(default=True)
-    is_staff        = models.BooleanField(default=False)
-    last_login      = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'app_user'
@@ -58,33 +32,6 @@ class AppUser(AbstractBaseUser):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-    
-    # JWT/Django 인증 호환을 위한 필수 속성
-    @property
-    def is_authenticated(self): return True
-    # @property
-    # def is_active(self): return True
-    # @property
-    # def is_staff(self): return True
-    @property
-    def is_anonymous(self): return False
-
-    # admin auth check
-    def has_perm(self, perm, obj=None):
-        return self.is_staff
-
-    def has_module_perms(self, app_label):
-        return self.is_staff
-    
-    # SimpleJWT는 'id' 필드명을 기준으로 토큰을 만듭니다
-    @property
-    def id(self): return self.pk
-
-    objects = AppUserManager()
-    
-    # Django 인증 시스템이 요구하는 식별자
-    USERNAME_FIELD = 'email' 
-    REQUIRED_FIELDS = ['first_name', 'last_name']
 
 
 class VehicleType(models.Model):

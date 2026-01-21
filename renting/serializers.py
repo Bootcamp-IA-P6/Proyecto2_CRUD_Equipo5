@@ -1,6 +1,4 @@
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError 
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
@@ -127,38 +125,5 @@ class ReservationSerializer(serializers.ModelSerializer):
         try:
             instance.full_clean()
         except ValidationError as e:
-            # 장고 모델 에러를 DRF 에러로 변환
             raise serializers.ValidationError(e.message_dict)
-            
         return attrs
-
-    # VALIDACIÓN: El total de la reserva debe ser positivo
-    def validate_total_price(self, value):
-        if value is not None and value <= 0:
-            raise serializers.ValidationError("El precio total debe ser mayor que cero.")
-        return value 
-
-class MyTokenObtainPairSerializer(serializers.Serializer):
-    username = serializers.EmailField() # JS의 username 키 대응
-    password = serializers.CharField(write_only=True)
-
-    def validate(self, attrs):
-        email = attrs.get("username")
-        password = attrs.get("password")
-
-        try:
-            user = AppUser.objects.get(email=email)
-        except AppUser.DoesNotExist:
-            raise serializers.ValidationError("No user found with this email.")
-
-        if not user.check_password(password):
-            raise serializers.ValidationError("Incorrect password.")
-
-        # 인증 성공 시 수동으로 토큰 생성
-        refresh = RefreshToken.for_user(user)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
-
-# temp change to trigger git
