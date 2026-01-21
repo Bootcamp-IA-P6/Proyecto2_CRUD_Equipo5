@@ -2,13 +2,36 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.hashers import make_password, check_password
 
-class AppUser(models.Model):
+# for superuser creation
+class AppUserManager(BaseUserManager):
+    def get_by_natural_key(self, email):
+        return self.get(email=email)
+    
+    def create_user(self, email, first_name, last_name, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Users must have an email address')
+        user = self.model(
+            email=self.normalize_email(email),
+            first_name=first_name,
+            last_name=last_name,
+            **extra_fields
+        )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, first_name, last_name, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True) # 슈퍼유저는 스태프 권한 가짐
+        return self.create_user(email, first_name, last_name, password, **extra_fields)
+    
+class AppUser(AbstractBaseUser):
     first_name      = models.CharField(max_length=100)
     last_name       = models.CharField(max_length=100)
     email           = models.EmailField(max_length=150, unique=True)
-    password        = models.CharField(max_length=128)  # ✅ NUEVO
+    password        = models.CharField(max_length=128)
     birth_date      = models.DateField(null=True, blank=True)
     license_number  = models.CharField(max_length=50, blank=True)
 
@@ -41,16 +64,21 @@ class AppUser(models.Model):
         # 특정 유저만 주고 싶다면 DB에 필드를 추가해야 하지만, 지금은 테스트를 위해 True로 설정합니다.
         return True
 
-    # [추가] 권한 체크 메서드 (Admin 작동을 위해 필수)
+    # admin auth check
     def has_perm(self, perm, obj=None):
-        return True
+        return self.is_staff
 
     def has_module_perms(self, app_label):
-        return True
+        return self.is_staff
     
     # SimpleJWT는 'id' 필드명을 기준으로 토큰을 만듭니다
     @property
     def id(self): return self.pk
+
+    is_staff        = models.BooleanField(default=False) # 기본값은 False (일반유저)
+    last_login      = models.DateTimeField(null=True, blank=True)
+
+    objects = AppUserManager()
     
     # Django 인증 시스템이 요구하는 식별자
     USERNAME_FIELD = 'email' 
