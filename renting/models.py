@@ -34,6 +34,9 @@ class AppUser(AbstractBaseUser):
     password        = models.CharField(max_length=128)
     birth_date      = models.DateField(null=True, blank=True)
     license_number  = models.CharField(max_length=50, blank=True)
+    is_active       = models.BooleanField(default=True)
+    is_staff        = models.BooleanField(default=False)
+    last_login      = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = 'app_user'
@@ -52,17 +55,12 @@ class AppUser(AbstractBaseUser):
     # JWT/Django 인증 호환을 위한 필수 속성
     @property
     def is_authenticated(self): return True
+    # @property
+    # def is_active(self): return True
     @property
-    def is_active(self): return True
+    # def is_staff(self): return True
     @property
     def is_anonymous(self): return False
-
-    # [추가] Admin 접속을 위해 필요한 속성
-    @property
-    def is_staff(self):
-        # 모든 유저에게 어드민 접속 권한을 주려면 True
-        # 특정 유저만 주고 싶다면 DB에 필드를 추가해야 하지만, 지금은 테스트를 위해 True로 설정합니다.
-        return True
 
     # admin auth check
     def has_perm(self, perm, obj=None):
@@ -74,9 +72,6 @@ class AppUser(AbstractBaseUser):
     # SimpleJWT는 'id' 필드명을 기준으로 토큰을 만듭니다
     @property
     def id(self): return self.pk
-
-    is_staff        = models.BooleanField(default=False) # 기본값은 False (일반유저)
-    last_login      = models.DateTimeField(null=True, blank=True)
 
     objects = AppUserManager()
     
