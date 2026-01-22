@@ -110,6 +110,11 @@ class ReservationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['user', 'coverage', 'rate', 'total_price']
 
+        # ← AÑADIR extra_kwargs (doble seguro)
+        extra_kwargs = {
+            'user': {'read_only': True},
+        }
+
     def validate(self, attrs):
         # 1. 현재 요청을 보낸 유저 정보를 가져옵니다.
         request = self.context.get('request')
