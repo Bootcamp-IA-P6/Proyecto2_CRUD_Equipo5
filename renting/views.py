@@ -36,7 +36,7 @@ from rest_framework.response import Response
 from .serializers import (
     AppUserSerializer, VehicleTypeSerializer, BrandSerializer,
     FuelTypeSerializer, ColorSerializer, TransmissionSerializer,
-    CarModelSerializer, CarSerializer, ReservationSerializer
+    CarModelSerializer, CarSerializer, ReservationSerializer, AppUserSignupSerializer
 )
 
 class AppUserViewSet(viewsets.ModelViewSet):
@@ -69,6 +69,12 @@ class AppUserViewSet(viewsets.ModelViewSet):
         # 현재 로그인한 유저 정보를 반환하는 기존 로직 유지
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return AppUserSignupSerializer  # Strict validation
+        return AppUserSerializer  # Normal para list/retrieve
+
 
 class VehicleTypeViewSet(viewsets.ModelViewSet):
     queryset = VehicleType.objects.all()

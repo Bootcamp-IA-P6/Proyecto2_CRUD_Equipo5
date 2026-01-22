@@ -2,6 +2,9 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError 
+import re
+from datetime import date
+from django.contrib.auth.hashers import make_password
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
     CarModel, Car, Reservation
@@ -34,6 +37,84 @@ class AppUserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+def capitalize_name(name):
+    """Capitaliza cada palabra: 'maria de la cruz' → 'Maria De La Cruz'"""
+    return ' '.join(word.capitalize() for word in name.split())
+
+class AppUserSignupSerializer(serializers.ModelSerializer):
+    """
+    Issue #55 - Strict Signup Validation (solo para CREATE)
+    """
+    
+    class Meta:
+        model = AppUser
+        fields = ['first_name', 'last_name', 'email', 'password', 'birth_date', 'license_number']
+        extra_kwargs = {'password': {'write_only': True}}
+    
+    def validate_first_name(self, value):
+        """No numbers, no special chars, Capitalized"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("First name is required.")
+        
+        if not re.match(r'^[a-zA-Z\sáéíóúñÁÉÍÓÚÑ]+$', value):
+            raise serializers.ValidationError("First name can only contain letters and spaces.")
+        
+        return capitalize_name(value.strip())  # ✅ Función personalizada
+    
+    def validate_last_name(self, value):
+        """Igual que first_name"""
+        if not value or not value.strip():
+            raise serializers.ValidationError("Last name is required.")
+        
+        if not re.match(r'^[a-zA-Z\sáéíóúñÁÉÍÓÚÑ]+$', value):
+            raise serializers.ValidationError("Last name can only contain letters and spaces.")
+        
+        return capitalize_name(value.strip())
+    
+    def validate_email(self, value):
+        """Valid format + unique"""
+        if AppUser.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("This email is already registered.")
+        
+        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', value):
+            raise serializers.ValidationError("Enter a valid email address.")
+        
+        return value.lower().strip()
+    
+    def validate_password(self, value):
+        """8+ chars, upper, lower, number, special, no emojis"""
+        if len(value) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters.")
+        
+        if not re.search(r'[A-Z]', value):
+            raise serializers.ValidationError("Password must contain 1 uppercase letter.")
+        if not re.search(r'[a-z]', value):
+            raise serializers.ValidationError("Password must contain 1 lowercase letter.")
+        if not re.search(r'\d', value):
+            raise serializers.ValidationError("Password must contain 1 number.")
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', value):
+            raise serializers.ValidationError("Password must contain 1 special character.")
+        
+        return value
+    
+    def validate_birth_date(self, value):
+        """>= 18 años, no futuro"""
+        today = date.today()
+        if value > today:
+            raise serializers.ValidationError("Birth date cannot be in the future.")
+        
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+        if age < 18:
+            raise serializers.ValidationError("User must be at least 18 years old.")
+        
+        return value
+    
+    def create(self, validated_data):
+        """Hashear password"""
+        password = validated_data.pop('password')
+        validated_data['password'] = make_password(password)
+        return super().create(validated_data)
 
 
 class VehicleTypeSerializer(serializers.ModelSerializer):
