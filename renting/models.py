@@ -116,6 +116,7 @@ class CarModel(models.Model):
     fuel_type       = models.ForeignKey(FuelType, on_delete=models.SET_NULL, null=True, blank=True)
     transmission    = models.ForeignKey(Transmission, on_delete=models.SET_NULL, null=True, blank=True)
     daily_price     = models.DecimalField(max_digits=10, decimal_places=2)
+    image           = models.ImageField(upload_to='car_models/', null=True, blank=True)
 
     class Meta:
         db_table = 'car_model'
@@ -206,5 +207,3 @@ class Reservation(models.Model):
     def save(self, *args, **kwargs):
         self.calculate_details()
         super().save(*args, **kwargs)
-
-# temp change to trigger git
