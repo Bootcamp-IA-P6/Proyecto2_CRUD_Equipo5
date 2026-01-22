@@ -1,9 +1,10 @@
 {% extends 'renting/base.html' %}
+{% load static %} <!-- 1. 상단에 static 로드 추가 -->
+
 {% block content %}
 <div class="card shadow p-4 mx-auto" style="max-width: 550px;">
     <h2 class="text-center mb-4">Create Your Account</h2>
     
-    <!-- 전체 상태 메시지 영역 -->
     <div id="form-status" class="alert d-none"></div>
 
     <form id="register-form" novalidate>
@@ -55,112 +56,7 @@
         <button type="submit" class="btn btn-success w-100 mt-3 py-2" id="submit-btn">Register</button>
     </form>
 </div>
-<script>
-    function clearErrors() {
-        document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
-        document.getElementById('form-status').classList.add('d-none');
-    }
 
-    // 1. 프론트엔드 검증 강화 (백엔드 SignupSerializer 규칙과 동일하게 설정)
-    function validateFrontend(data, passConfirm) {
-        let isValid = true;
-
-        // 이름 정규식 (문자만 허용)
-        const nameRegex = /^[a-zA-Z\sáéíóúñÁÉÍÓÚÑ]+$/;
-        if (!nameRegex.test(data.first_name)) {
-            document.getElementById('error-first_name').innerText = "Names can only contain letters.";
-            isValid = false;
-        }
-        if (!nameRegex.test(data.last_name)) {
-            document.getElementById('error-last_name').innerText = "Names can only contain letters.";
-            isValid = false;
-        }
-
-        // 이메일 정규식 (엄격한 형식)
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!emailRegex.test(data.email)) {
-            document.getElementById('error-email').innerText = "Please enter a valid email (e.g., raul@mail.com).";
-            isValid = false;
-        }
-
-        // 비밀번호 강도
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
-        if (!passwordRegex.test(data.password)) {
-            document.getElementById('error-password').innerText = "Must be 8+ chars, with upper, lower, number, and special char.";
-            isValid = false;
-        }
-
-        // 비밀번호 확인
-        if (data.password !== passConfirm) {
-            document.getElementById('error-password_confirm').innerText = "Passwords do not match.";
-            isValid = false;
-        }
-
-        // 나이 체크 (만 18세)
-        if (data.birth_date) {
-            const birth = new Date(data.birth_date);
-            const today = new Date();
-            let age = today.getFullYear() - birth.getFullYear();
-            if (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) age--;
-            if (age < 18) {
-                document.getElementById('error-birth_date').innerText = "Must be at least 18 years old.";
-                isValid = false;
-            }
-        }
-
-        return isValid;
-    }
-
-    document.getElementById('register-form').onsubmit = async (e) => {
-        e.preventDefault();
-        clearErrors();
-
-        const payload = {
-            first_name: document.getElementById('reg-fname').value,
-            last_name: document.getElementById('reg-lname').value,
-            email: document.getElementById('reg-email').value,
-            password: document.getElementById('reg-pass').value,
-            birth_date: document.getElementById('reg-bdate').value,
-            license_number: document.getElementById('reg-license').value
-        };
-        const passConfirm = document.getElementById('reg-pass-confirm').value;
-
-        // 프론트엔드 1차 검사
-        if (!validateFrontend(payload, passConfirm)) return;
-
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-
-        try {
-            const response = await fetch('/api/users/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                alert("Success!");
-                window.location.href = "{% url 'login' %}";
-            } else {
-                // 2. 서버 에러 표시 로직 (중요: details 계층 대응)
-                // 서버가 {"details": {"email": [...]}} 로 줄 수도 있고, {"email": [...]} 로 줄 수도 있음
-                const errors = result.details || result; 
-                
-                for (const field in errors) {
-                    const errorDiv = document.getElementById(`error-${field}`);
-                    if (errorDiv) {
-                        // 에러 메시지가 배열이면 첫 번째 문장 표시
-                        errorDiv.innerText = Array.isArray(errors[field]) ? errors[field][0] : errors[field];
-                    }
-                }
-                btn.disabled = false;
-            }
-        } catch (error) {
-            console.error(error);
-            btn.disabled = false;
-        }
-    };
-</script>
+<!-- 2. 외부 스크립트 연결 -->
+<script src="{% static 'renting/js/register.js' %}"></script>
 {% endblock %}
