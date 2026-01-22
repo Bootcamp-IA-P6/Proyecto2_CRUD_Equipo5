@@ -1,6 +1,9 @@
 import logging
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+from .filters import CarFilter, ReservationFilter
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
@@ -103,6 +106,11 @@ class CarViewSet(viewsets.ModelViewSet):
     serializer_class = CarSerializer
     permission_classes = [IsAuthenticated]
 
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = CarFilter
+    search_fields = ['license_plate', 'car_model__model_name']
+    ordering_fields = ['license_plate']
+
     def perform_create(self, serializer):
         car = serializer.save()
         logger.info(f"Car created: {car.license_plate}")
@@ -117,6 +125,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
     ).all()
     serializer_class = ReservationSerializer
     permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = ReservationFilter
+    search_fields = ['user__email', 'car__license_plate']
+    ordering_fields = ['start_date', 'end_date']
 
     def perform_create(self, serializer):
         reservation = serializer.save(user=self.request.user)
