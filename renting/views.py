@@ -5,6 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .filters import CarFilter, ReservationFilter
 from rest_framework_simplejwt.tokens import RefreshToken
+from .permissions import IsReservationOwnerOrStaff 
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
     CarModel, Car, Reservation
@@ -124,12 +125,21 @@ class ReservationViewSet(viewsets.ModelViewSet):
         'user', 'car', 'car__car_model', 'car__car_model__brand'
     ).all()
     serializer_class = ReservationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsReservationOwnerOrStaff]  # ← CAMBIAR
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ReservationFilter
     search_fields = ['user__email', 'car__license_plate']
     ordering_fields = ['start_date', 'end_date']
+
+    def get_queryset(self):
+        """
+        Issue #24: Non-staff solo ve sus reservas
+        """
+        queryset = super().get_queryset()
+        if not self.request.user.is_staff:
+            return queryset.filter(user=self.request.user)
+        return queryset
 
     def perform_create(self, serializer):
         reservation = serializer.save(user=self.request.user)
