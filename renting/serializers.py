@@ -229,26 +229,47 @@ class ReservationSerializer(serializers.ModelSerializer):
         return value 
 
 class MyTokenObtainPairSerializer(serializers.Serializer):
-    username = serializers.EmailField() # JS의 username 키 대응
-    password = serializers.CharField(write_only=True)
+    username = serializers.EmailField(required=True)  # ← required=True
+    password = serializers.CharField(write_only=True, required=True)  # ← required=True
 
     def validate(self, attrs):
         email = attrs.get("username")
         password = attrs.get("password")
 
+        # 1. Validación campos requeridos
+        errors = {}
+        if not email:
+            errors["username"] = ["Email is required."]
+        if not password:
+            errors["password"] = ["Password is required."]
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        # 2. Normalizar email
+        email = email.strip().lower()
+
+        # 3. Credenciales SIN filtrar info sensible
         try:
             user = AppUser.objects.get(email=email)
         except AppUser.DoesNotExist:
-            raise serializers.ValidationError("No user found with this email.")
+            # SIEMPRE misma respuesta (no dice si existe o no)
+            raise serializers.ValidationError({
+                "detail": "Invalid credentials."
+            })
 
         if not user.check_password(password):
-            raise serializers.ValidationError("Incorrect password.")
+            # Misma respuesta que arriba
+            raise serializers.ValidationError({
+                "detail": "Invalid credentials."
+            })
 
-        # 인증 성공 시 수동으로 토큰 생성
+        # 4. Éxito → tokens
         refresh = RefreshToken.for_user(user)
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+
 
 # temp change to trigger git
