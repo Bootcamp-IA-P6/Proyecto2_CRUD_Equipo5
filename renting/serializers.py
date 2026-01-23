@@ -181,6 +181,11 @@ class CarSerializer(serializers.ModelSerializer):
     # (Aquí ya no hace falta el validate_price porque el precio está en CarModel)
 
 
+from rest_framework import serializers
+from django.utils import timezone
+from datetime import timedelta
+from .models import Reservation
+
 class ReservationSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.first_name', read_only=True)
     car_license = serializers.CharField(source='car.license_plate', read_only=True)
@@ -194,19 +199,19 @@ class ReservationSerializer(serializers.ModelSerializer):
             'user_name', 'car_license', 'model_name'
         ]
         read_only_fields = ['user', 'coverage', 'rate', 'total_price']
-
-        # ← AÑADIR extra_kwargs (doble seguro)
         extra_kwargs = {
             'user': {'read_only': True},
         }
 
+    def validate_start_date(self, value):
+        """#59: start_date cannot be in the past"""
+        if value < timezone.now().date():
+            raise serializers.ValidationError("La fecha de inicio no puede ser en el pasado.")
+        return value
+
     def validate(self, attrs):
-        # 1. 현재 요청을 보낸 유저 정보를 가져옵니다.
         request = self.context.get('request')
         user = request.user if request else None
-
-        # 2. 검증용 임시 인스턴스를 만들 때 유저 정보를 포함시킵니다.
-        # (이렇게 해야 full_clean()이 '유저가 없네?'라고 화내지 않습니다.)
         instance = getattr(self, 'instance', None)
         if instance:
             for attr, value in attrs.items():
@@ -217,16 +222,38 @@ class ReservationSerializer(serializers.ModelSerializer):
         try:
             instance.full_clean()
         except ValidationError as e:
-            # 장고 모델 에러를 DRF 에러로 변환
             raise serializers.ValidationError(e.message_dict)
-            
+
+        # 🔴 NUEVO #59: Validaciones de fechas
+        start_date = attrs['start_date']
+        end_date = attrs['end_date']
+        car = attrs['car']
+
+        # end_date > start_date
+        if end_date <= start_date:
+            raise serializers.ValidationError(
+                "La fecha de fin debe ser posterior a la fecha de inicio."
+            )
+
+        # NO SOLAPAMIENTO - Query eficiente
+        overlapping = Reservation.objects.filter(
+            car=car,
+            start_date__lt=end_date,
+            end_date__gt=start_date
+        ).exclude(pk=self.instance.pk if self.instance else None)
+        
+        if overlapping.exists():
+            raise serializers.ValidationError(
+                "El vehículo ya está reservado en esas fechas."
+            )
+
         return attrs
 
-    # VALIDACIÓN: El total de la reserva debe ser positivo
     def validate_total_price(self, value):
         if value is not None and value <= 0:
             raise serializers.ValidationError("El precio total debe ser mayor que cero.")
         return value 
+
 
 class MyTokenObtainPairSerializer(serializers.Serializer):
     username = serializers.EmailField(required=True)  # ← required=True
