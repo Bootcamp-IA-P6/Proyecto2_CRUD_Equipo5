@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView
 from renting.serializers import MyTokenObtainPairSerializer
@@ -20,4 +22,6 @@ urlpatterns = [
     # HTML templates + API (SOLO UN include)
     path('', include('renting.urls')),
 ]
-# temp change to trigger git
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
