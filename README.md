@@ -144,6 +144,30 @@ renting/
 ├── templates/      # HTML pages
 └── admin/          # Admin panel
 ```
+---
+
+## 📐 Database Diagram (ERD)
+
+This diagram represents the **single source of truth** for our database structure and relationships. It includes all core entities: Users, Vehicles (Cars), and Reservations, along with their respective lookup tables.
+
+![ERD](renting/docs/erd/erd.svg)
+
+### 📂 Database Schema Documentation
+
+#### 1. Configuration & Master Tables
+* **Brand:** Stores car manufacturers. [cite_start]It has a **1:N relationship** with `CarModel`[cite: 1, 23, 30].
+* **VehicleType:** Defines categories (SUV, Sedan, etc.). [cite_start]It has a **1:N relationship** with `CarModel`[cite: 6, 23, 32].
+* **FuelType:** Manages fuel variants (Diesel, Electric, etc.). [cite_start]It has a **1:N relationship** with `CarModel`[cite: 10, 23, 36].
+* **Transmission:** Specifies gearbox types (Manual/Automatic). [cite_start]It has a **1:N relationship** with `CarModel`[cite: 20, 23, 38].
+* **Color:** Stores the color palette. [cite_start]It maintains a **1:N relationship** with `Car`[cite: 13, 42, 49].
+
+#### 2. Inventory Structure
+* **CarModel:** The central entity for technical specifications and pricing. [cite_start]It has a **1:N relationship** with `Car`[cite: 23, 42, 45].
+* [cite_start]**Car:** Represents the physical assets, including unique license plates and mileage[cite: 42, 47, 51].
+
+#### 3. Business Logic & Operations
+* **AppUser:** Custom user model for customers. [cite_start]It has a **1:N relationship** with `Reservation`[cite: 53, 60, 87].
+* **Reservation:** The transactional entity linking users and cars for specific dates. [cite_start]It maintains **N:1 relationships** with both `AppUser` and `Car`[cite: 60, 87, 91].
 
 ---
 

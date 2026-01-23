@@ -1,0 +1,80 @@
+// Use dbdiagram.io to visualize this schema
+
+Table app_user {
+  id integer [primary key]
+  first_name varchar
+  last_name varchar
+  email email [unique]
+  password varchar
+  birth_date date
+  license_number varchar
+  is_active boolean
+  is_staff boolean
+  last_login datetime
+}
+
+Table vehicle_type {
+  id integer [primary key]
+  name varchar [unique]
+}
+
+Table brand {
+  id integer [primary key]
+  name varchar [unique]
+}
+
+Table fuel_type {
+  id integer [primary key]
+  name varchar [unique]
+}
+
+Table color {
+  id integer [primary key]
+  name varchar [unique]
+}
+
+Table transmission {
+  id integer [primary key]
+  name varchar [unique]
+}
+
+Table car_model {
+  id integer [primary key]
+  model_name varchar
+  brand_id integer
+  vehicle_type_id integer
+  seats integer
+  fuel_type_id integer
+  transmission_id integer
+  daily_price decimal
+  image varchar
+}
+
+Table car {
+  id integer [primary key]
+  car_model_id integer
+  license_plate varchar [unique]
+  color_id integer
+  mileage integer
+}
+
+Table reservation {
+  id integer [primary key]
+  start_date date
+  end_date date
+  coverage varchar
+  rate decimal
+  total_price decimal
+  user_id integer
+  car_id integer
+}
+
+// Relaciones (Foreign Keys)
+Ref: car_model.brand_id > brand.id
+Ref: car_model.vehicle_type_id > vehicle_type.id
+Ref: car_model.fuel_type_id > fuel_type.id
+Ref: car_model.transmission_id > transmission.id
+Ref: car.car_model_id > car_model.id
+Ref: car.color_id > color.id
+Ref: reservation.user_id > app_user.id
+Ref: reservation.car_id > car.id
