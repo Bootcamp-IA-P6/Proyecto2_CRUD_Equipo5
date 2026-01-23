@@ -17,3 +17,17 @@ class IsReservationOwnerOrStaff(permissions.BasePermission):
             return True
         # Non-staff: solo suya
         return obj.user == request.user
+
+class IsStaffPermission(permissions.BasePermission):
+    """#61 Staff: manage vehicles + view all users"""
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        return request.user.is_staff
+
+class IsStaffOrReadOnlyPermission(permissions.BasePermission):
+    """#61 Staff=CRUD, Public=ReadOnly"""
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:  # GET, HEAD, OPTIONS
+            return True
+        return request.user.is_staff
