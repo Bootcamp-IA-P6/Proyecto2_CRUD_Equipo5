@@ -1,43 +1,30 @@
-<!-- templates/renting/login.html -->
 {% extends 'renting/base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="card p-4 mx-auto shadow" style="max-width: 400px;">
-    <h3 class="text-center mb-4">Login (JWT)</h3>
-    <form id="login-form">
+<div class="card p-4 mx-auto shadow" style="max-width: 400px; margin-top: 50px;">
+    <h3 class="text-center mb-4">Login</h3>
+
+    <!-- Global Error Message Container -->
+    <div id="global-error" class="alert alert-danger d-none mb-3" role="alert"></div>
+
+    <form id="login-form" novalidate>
         <div class="mb-3">
-            <label>Email</label>
-            <input type="email" id="email" class="form-control" required>
+            <label class="form-label">Email</label>
+            <input type="email" id="email" class="form-control" placeholder="name@example.com">
+            <div id="error-username" class="text-danger small mt-1"></div>
         </div>
         <div class="mb-3">
-            <label>Password</label>
-            <input type="password" id="password" class="form-control" required>
+            <label class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Enter password">
+            <div id="error-password" class="text-danger small mt-1"></div>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Login</button>
+        <button type="submit" class="btn btn-primary w-100 py-2">Login</button>
     </form>
+    <div class="mt-3 text-center">
+        <small>Don't have an account? <a href="{% url 'register' %}" class="text-decoration-none">Sign up</a></small>
+    </div>
 </div>
 
-<script>
-    document.getElementById('login-form').onsubmit = async (e) => {
-        e.preventDefault();
-        
-        const payload = {
-            username: document.getElementById('email').value, // JWT 기본 키값
-            password: document.getElementById('password').value
-        };
-
-        const response = await fetch('/api/token/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            Auth.saveTokens(data); // base.html의 Auth 객체 사용
-            window.location.href = "{% url 'home' %}";
-        } else {
-            alert("Login failed. Check your credentials.");
-        }
-    };
-</script>
+<script src="{% static 'renting/js/login.js' %}"></script>
 {% endblock %}
