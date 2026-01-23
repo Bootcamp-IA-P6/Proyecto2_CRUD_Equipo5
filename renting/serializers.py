@@ -169,10 +169,14 @@ class CarSerializer(serializers.ModelSerializer):
     car_model_name = serializers.CharField(source='car_model.model_name', read_only=True)
     brand_name = serializers.CharField(source='car_model.brand.name', read_only=True)
     color_name = serializers.CharField(source='color.name', read_only=True)
+    car_model_image = serializers.ImageField(source='car_model.image', read_only=True)
 
     class Meta:
         model = Car
-        fields = '__all__'
+        fields = [
+            'id', 'car_model', 'car_model_name', 'brand_name', 
+            'license_plate', 'color', 'color_name', 'mileage', 'car_model_image'
+        ]
     
     # (Aquí ya no hace falta el validate_price porque el precio está en CarModel)
 
