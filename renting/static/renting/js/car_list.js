@@ -6,6 +6,8 @@ async function loadCars() {
 
     const data = await response.json();
     const items = Array.isArray(data) ? data : (data.results || []);
+
+    console.log("First Car Data Object:", items[0]); 
     
     const tbody = document.getElementById('car-list-body');
     
