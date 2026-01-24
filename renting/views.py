@@ -120,7 +120,7 @@ class CarViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = CarFilter
     search_fields = ['license_plate', 'car_model__model_name']
-    ordering_fields = ['license_plate']
+    ordering_fields = ['license_plate', 'car_model__daily_price', 'mileage']
 
     def perform_create(self, serializer):
         car = serializer.save()
