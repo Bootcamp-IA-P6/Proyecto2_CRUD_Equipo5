@@ -22,8 +22,10 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('users/', views.user_list, name='user_list'),
     path('cars/', views.car_list, name='car_list'),
+    path('cars/<int:id>/', views.car_detail, name='car_detail'),
     path('reservations/', views.reservation_list, name='reservation_list'),
-    path('reservations/create/', views.reservation_create, name='reservation_create'),    path('api/', include(router.urls)),
+    path('reservations/create/', views.reservation_create, name='reservation_create'),
+    path('api/', include(router.urls)),
     # -- login -- #
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
