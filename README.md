@@ -147,6 +147,33 @@ renting/
 
 ---
 
+## 📐 Database Diagram (ERD)
+
+This diagram represents the final database schema, including business rules for coverage and price calculations.
+
+![ERD](renting/docs/erd/erd.svg)
+
+---
+
+## 📂 Database Schema Documentation
+
+#### 1. Master Tables (Configuration)
+* **Brand**: Stores manufacturers. 1:N relationship with `CarModel`.
+* **VehicleType**: Defines categories (SUV, Sedan). 1:N relationship with `CarModel`.
+* **FuelType**: Specifies energy source. 1:N relationship with `CarModel`.
+* **Transmission**: Manual or automatic. 1:N relationship with `CarModel`.
+* **Color**: Aesthetic property of each physical unit. 1:N relationship with `Car`.
+
+#### 2. Inventory Relationships
+* **CarModel**: Central table for specs and `daily_price`. 1:N relationship with `Car`.
+* **Car**: Actual asset with license plate and mileage. 1:N relationship with `Reservation`.
+
+#### 3. Business Relationships
+* **AppUser**: Stores customer info. The `birth_date` determines the coverage level. 1:N relationship with `Reservation`.
+* **Reservation**: Links user and car. Calculates `total_price` by multiplying `daily_price` by the applied `rate`.
+
+---
+
 ## 🧰 Tech Stack
 
 * 🐍 Python
