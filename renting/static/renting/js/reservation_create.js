@@ -75,19 +75,31 @@ document.getElementById('res-create-form').onsubmit = async (e) => {
  * 초기화: 차량 목록 로드 및 날짜 제한 설정
  */
 async function initReservationPage() {
-    // 오늘 이전 날짜 선택 방지
+    // 1. 날짜 제한 (오늘 이전 선택 불가)
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('start_date').setAttribute('min', today);
     document.getElementById('end_date').setAttribute('min', today);
 
+    // 2. 차량 목록 로드
     const carRes = await fetchWithAuth('/api/cars/');
     if (carRes && carRes.ok) {
         const data = await carRes.json();
         const cars = data.results || data;
         const select = document.getElementById('car-select');
+        
         select.innerHTML = cars.map(c => 
             `<option value="${c.id}">${c.car_model_name} (${c.license_plate})</option>`
         ).join('');
+
+        // ⚠️ [CORE LOGIC] URL 파라미터 확인 및 자동 선택
+        const urlParams = new URLSearchParams(window.location.search);
+        const preSelectedCarId = urlParams.get('car');
+        
+        if (preSelectedCarId) {
+            select.value = preSelectedCarId;
+            // 시각적 피드백: 테두리 강조
+            select.classList.add('border-primary', 'bg-light');
+        }
     }
 }
 
