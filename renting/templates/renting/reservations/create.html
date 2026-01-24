@@ -1,67 +1,40 @@
-<!-- templates/renting/reservations/create.html -->
 {% extends 'renting/base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="card shadow p-4 mx-auto" style="max-width: 500px;">
-    <h3>New Reservation</h3>
-    <p class="text-muted">Booking as: <span id="current-user-email" class="fw-bold text-primary">Loading...</span></p>
-    
-    <form id="res-create-form">
+<div class="card shadow p-4 mx-auto" style="max-width: 600px; margin-top: 30px;">
+    <h3 class="mb-4 text-center">New Reservation</h3>
+
+    <div id="global-error" class="alert alert-danger d-none mb-3"></div>
+
+    <form id="res-create-form" novalidate>
         <div class="mb-3">
-            <label>Select Car</label>
-            <select id="car-select" class="form-select" required></select>
+            <label class="form-label">Select Vehicle</label>
+            <select id="car-select" class="form-select" required>
+                <option value="">Loading available cars...</option>
+            </select>
+            <div id="error-car" class="text-danger small mt-1"></div>
         </div>
+
         <div class="row">
-            <div class="col-md-6 mb-3"><label>Start</label><input type="date" id="start_date" class="form-control" required></div>
-            <div class="col-md-6 mb-3"><label>End</label><input type="date" id="end_date" class="form-control" required></div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Pick-up Date</label>
+                <input type="date" id="start_date" class="form-control" required>
+                <div id="error-start_date" class="text-danger small mt-1"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>Return Date</label>
+                <input type="date" id="end_date" class="form-control" required>
+                <div id="error-end_date" class="text-danger small mt-1"></div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Reserve Now</button>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary w-100 py-2">Confirm Reservation</button>
+            <a href="{% url 'reservation_list' %}" class="btn btn-link w-100 mt-2 text-decoration-none text-muted">Cancel</a>
+        </div>
     </form>
 </div>
 
-<script>
-    async function initPage() {
-        // 1. 현재 내가 누구인지 확인 (확인용)
-        const userRes = await fetchWithAuth('/api/users/me/');
-        if (userRes && userRes.ok) {
-            const userData = await userRes.json();
-            document.getElementById('current-user-email').innerText = userData.email;
-        }
-
-        // 2. 차량 목록 로드
-        const carRes = await fetchWithAuth('/api/cars/');
-        if (carRes && carRes.ok) {
-            const data = await carRes.json();
-            const cars = Array.isArray(data) ? data : (data.results || []);
-            document.getElementById('car-select').innerHTML = cars.map(c => 
-                `<option value="${c.id}">${c.car_model_name} (${c.license_plate})</option>`
-            ).join('');
-        }
-    }
-
-    document.getElementById('res-create-form').onsubmit = async (e) => {
-        e.preventDefault();
-        
-        const payload = {
-            car: document.getElementById('car-select').value,
-            start_date: document.getElementById('start_date').value,
-            end_date: document.getElementById('end_date').value
-            // ❌ 'user' 필드는 더 이상 보낼 필요 없음 (서버가 알아서 함)
-        };
-
-        const res = await fetchWithAuth('/api/reservations/', {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-
-        if (res && res.ok) {
-            alert("Reservation success!");
-            window.location.href = "{% url 'reservation_list' %}";
-        } else {
-            const err = await res.json();
-            alert("Error: " + JSON.stringify(err));
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', initPage);
-</script>
+<script src="{% static 'renting/js/reservation_create.js' %}"></script>
 {% endblock %}
