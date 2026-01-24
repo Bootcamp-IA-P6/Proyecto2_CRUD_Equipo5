@@ -1,13 +1,15 @@
+{% load static %}
 <!-- templates/renting/base.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rental System - API Driven</title>
+    <title>Rental System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
+    <!-- Navbar (Same as before) -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">Rental System</a>
@@ -15,66 +17,24 @@
                 <a class="nav-link" href="{% url 'car_list' %}">Cars</a>
                 <a class="nav-link" href="{% url 'reservation_list' %}">Reservations</a>
             </div>
-            <!-- JS로 제어할 네비게이션 영역 -->
-            <div class="navbar-nav" id="nav-auth-section">
-                <!-- 여기에 로그인/로그아웃 버튼이 동적으로 뜹니다 -->
-            </div>
+            <div class="navbar-nav" id="nav-auth-section"></div>
         </div>
     </nav>
 
     <div class="container">
-        <div id="alert-container"></div> <!-- 동적 메시지 박스 -->
         {% block content %}{% endblock %}
     </div>
 
+    <!-- ⚠️ Load Auth Helper First -->
+    <script src="{% static 'renting/js/auth.js' %}"></script>
     <script>
-        // JWT 토큰 관리 헬퍼
-        const Auth = {
-            getTokens: () => JSON.parse(localStorage.getItem('tokens')),
-            saveTokens: (tokens) => localStorage.setItem('tokens', JSON.stringify(tokens)),
-            clear: () => localStorage.removeItem('tokens'),
-            isLoggedIn: () => !!localStorage.getItem('tokens')
-        };
-
-        // 전역 인증 API 호출 함수 (핵심 요구사항)
-        async function fetchWithAuth(url, options = {}) {
-            const tokens = Auth.getTokens();
-            if (!tokens) {
-                window.location.href = "{% url 'login' %}";
-                return;
-            }
-
-            options.headers = {
-                ...options.headers,
-                'Authorization': `Bearer ${tokens.access}`,
-                'Content-Type': 'application/json'
-            };
-
-            const response = await fetch(url, options);
-
-            if (response.status === 401) {
-                // 토큰 만료 시 처리
-                alert("Session expired. Please login again.");
-                Auth.clear();
-                window.location.href = "{% url 'login' %}";
-                return null;
-            }
-            return response;
-        }
-
-        function logout() {
-            localStorage.clear();
-            Auth.clear();
-            window.location.href = "{% url 'login' %}";
-        }
-
-        // UI 상태 업데이트 (Login/Logout 버튼 전환)
-        function updateNavbar() {
+        // Update Navbar on page load
+        document.addEventListener('DOMContentLoaded', () => {
             const section = document.getElementById('nav-auth-section');
             if (Auth.isLoggedIn()) {
                 section.innerHTML = `
-                    <span class="nav-link text-light">User Mode (JWT)</span>
-                    <button class="btn btn-danger btn-sm text-white ms-2" onclick="logout()">Logout</button>
+                    <span class="nav-link text-light">Welcome User</span>
+                    <button class="btn btn-outline-danger btn-sm ms-2" onclick="logout()">Logout</button>
                 `;
             } else {
                 section.innerHTML = `
@@ -82,17 +42,12 @@
                     <a class="nav-link" href="{% url 'login' %}">Login</a>
                 `;
             }
-        }
 
-        // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', () => {
-            updateNavbar();
-            
-            // 보호된 페이지 리다이렉션 (로그인/가입/홈 제외하고 리다이렉트)
+            // Global Guard
             const path = window.location.pathname;
             const isPublic = path === '/' || path.includes('/login/') || path.includes('/register/');
             if (!Auth.isLoggedIn() && !isPublic) {
-                window.location.href = "{% url 'login' %}";
+                window.location.href = "/login/?reason=expired";
             }
         });
     </script>

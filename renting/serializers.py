@@ -169,13 +169,22 @@ class CarSerializer(serializers.ModelSerializer):
     car_model_name = serializers.CharField(source='car_model.model_name', read_only=True)
     brand_name = serializers.CharField(source='car_model.brand.name', read_only=True)
     color_name = serializers.CharField(source='color.name', read_only=True)
+    car_model_image = serializers.ImageField(source='car_model.image', read_only=True)
 
     class Meta:
         model = Car
-        fields = '__all__'
+        fields = [
+            'id', 'car_model', 'car_model_name', 'brand_name', 
+            'license_plate', 'color', 'color_name', 'mileage', 'car_model_image'
+        ]
     
     # (Aquí ya no hace falta el validate_price porque el precio está en CarModel)
 
+
+from rest_framework import serializers
+from django.utils import timezone
+from datetime import timedelta
+from .models import Reservation
 
 class ReservationSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.first_name', read_only=True)
@@ -190,19 +199,19 @@ class ReservationSerializer(serializers.ModelSerializer):
             'user_name', 'car_license', 'model_name'
         ]
         read_only_fields = ['user', 'coverage', 'rate', 'total_price']
-
-        # ← AÑADIR extra_kwargs (doble seguro)
         extra_kwargs = {
             'user': {'read_only': True},
         }
 
+    def validate_start_date(self, value):
+        """#59: start_date cannot be in the past"""
+        if value < timezone.now().date():
+            raise serializers.ValidationError("La fecha de inicio no puede ser en el pasado.")
+        return value
+
     def validate(self, attrs):
-        # 1. 현재 요청을 보낸 유저 정보를 가져옵니다.
         request = self.context.get('request')
         user = request.user if request else None
-
-        # 2. 검증용 임시 인스턴스를 만들 때 유저 정보를 포함시킵니다.
-        # (이렇게 해야 full_clean()이 '유저가 없네?'라고 화내지 않습니다.)
         instance = getattr(self, 'instance', None)
         if instance:
             for attr, value in attrs.items():
@@ -213,38 +222,81 @@ class ReservationSerializer(serializers.ModelSerializer):
         try:
             instance.full_clean()
         except ValidationError as e:
-            # 장고 모델 에러를 DRF 에러로 변환
             raise serializers.ValidationError(e.message_dict)
-            
+
+        # 🔴 NUEVO #59: Validaciones de fechas
+        start_date = attrs['start_date']
+        end_date = attrs['end_date']
+        car = attrs['car']
+
+        # end_date > start_date
+        if end_date <= start_date:
+            raise serializers.ValidationError(
+                "La fecha de fin debe ser posterior a la fecha de inicio."
+            )
+
+        # NO SOLAPAMIENTO - Query eficiente
+        overlapping = Reservation.objects.filter(
+            car=car,
+            start_date__lt=end_date,
+            end_date__gt=start_date
+        ).exclude(pk=self.instance.pk if self.instance else None)
+        
+        if overlapping.exists():
+            raise serializers.ValidationError(
+                "El vehículo ya está reservado en esas fechas."
+            )
+
         return attrs
 
-    # VALIDACIÓN: El total de la reserva debe ser positivo
     def validate_total_price(self, value):
         if value is not None and value <= 0:
             raise serializers.ValidationError("El precio total debe ser mayor que cero.")
         return value 
 
+
 class MyTokenObtainPairSerializer(serializers.Serializer):
-    username = serializers.EmailField() # JS의 username 키 대응
-    password = serializers.CharField(write_only=True)
+    username = serializers.EmailField(required=True)  # ← required=True
+    password = serializers.CharField(write_only=True, required=True)  # ← required=True
 
     def validate(self, attrs):
         email = attrs.get("username")
         password = attrs.get("password")
 
+        # 1. Validación campos requeridos
+        errors = {}
+        if not email:
+            errors["username"] = ["Email is required."]
+        if not password:
+            errors["password"] = ["Password is required."]
+        
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        # 2. Normalizar email
+        email = email.strip().lower()
+
+        # 3. Credenciales SIN filtrar info sensible
         try:
             user = AppUser.objects.get(email=email)
         except AppUser.DoesNotExist:
-            raise serializers.ValidationError("No user found with this email.")
+            # SIEMPRE misma respuesta (no dice si existe o no)
+            raise serializers.ValidationError({
+                "detail": "Invalid credentials."
+            })
 
         if not user.check_password(password):
-            raise serializers.ValidationError("Incorrect password.")
+            # Misma respuesta que arriba
+            raise serializers.ValidationError({
+                "detail": "Invalid credentials."
+            })
 
-        # 인증 성공 시 수동으로 토큰 생성
+        # 4. Éxito → tokens
         refresh = RefreshToken.for_user(user)
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+
 
 # temp change to trigger git

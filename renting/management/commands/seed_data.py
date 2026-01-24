@@ -1,114 +1,160 @@
 # renting/management/commands/seed_data.py
 import random
+from datetime import date, timedelta
+from decimal import Decimal
 from django.core.management.base import BaseCommand
+from django.contrib.auth.hashers import make_password
 from renting.models import (
     AppUser, Brand, CarModel, Car, VehicleType, 
     FuelType, Color, Transmission, Reservation
 )
-from datetime import date, timedelta
-from decimal import Decimal
 
 class Command(BaseCommand):
-    help = 'Robust seed with variety for Color, Type, and Fuel (MySQL Compatible)'
+    help = 'Seeds fixed Car/Model data and dynamic Spanish Users/Reservations (Issue #77 Update)'
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(self.style.WARNING("🧹 Starting robust database seed (No global transaction)..."))
-        
-        # 1. 기초 테이블 생성 (Lookup Tables)
-        # atomic 블록 없이 각각 독립적으로 생성합니다.
-        brands = ["Toyota", "BMW", "Tesla", "Hyundai", "Ford", "Mercedes", "Audi"]
-        brand_objs = [Brand.objects.get_or_create(name=name)[0] for name in brands]
+        self.stdout.write(self.style.WARNING("🧹 Starting consistent database seed..."))
 
-        colors = ["Silver", "Black", "White", "Deep Blue", "Red"]
-        color_objs = [Color.objects.get_or_create(name=name)[0] for name in colors]
+        # 1. 고정 데이터 정의 (Constants)
+        SEATS_BY_TYPE = {
+            "Sedan": 5, "SUV": 7, "Compact": 4, "Van": 9, "Coupe": 4, "Truck": 2,
+        }
+        VEHICLE_TYPES = ["Sedan", "SUV", "Compact", "Van", "Coupe", "Truck"]
+        BRANDS = ["Boreal Motors", "VoltEra", "Iberia Drive", "NovaVelo", "BayerMotive", "Solano Cars", "Zenith Auto"]
+        FUELS = ["Gasoline", "Diesel", "Electric", "Hybrid"]
+        TRANSMISSIONS = ["Automatic", "Manual"]
+        COLORS = ["White", "Black", "Silver", "Grey", "Blue", "Red"]
 
-        v_types = ["SUV", "Sedan", "Hatchback", "Coupe"]
-        v_type_objs = [VehicleType.objects.get_or_create(name=name)[0] for name in v_types]
+        # 2. 기초 테이블 생성 (Lookup Tables)
+        brand_map = {name: Brand.objects.get_or_create(name=name)[0] for name in BRANDS}
+        vtype_map = {name: VehicleType.objects.get_or_create(name=name)[0] for name in VEHICLE_TYPES}
+        fuel_map = {name: FuelType.objects.get_or_create(name=name)[0] for name in FUELS}
+        trans_map = {name: Transmission.objects.get_or_create(name=name)[0] for name in TRANSMISSIONS}
+        color_map = {name: Color.objects.get_or_create(name=name)[0] for name in COLORS}
 
-        fuels = ["Gasoline", "Diesel", "Electric", "Hybrid"]
-        fuel_objs = [FuelType.objects.get_or_create(name=name)[0] for name in fuels]
+        # 3. 30개 고정 CarModel 데이터 (이미지 파일명 규칙 준수)
+        # (브랜드, 베이스모델명, 컬러, 타입, 연료, 변속기, 가격)
+        MODEL_DATA = [
+            ("Boreal Motors", "Civis", "Red", "Sedan", "Gasoline", "Automatic", 55),
+            ("Boreal Motors", "Civis", "White", "Sedan", "Gasoline", "Manual", 50),
+            ("Boreal Motors", "Prime", "Black", "SUV", "Diesel", "Automatic", 85),
+            ("VoltEra", "Neo", "Blue", "Compact", "Electric", "Automatic", 45),
+            ("VoltEra", "Neo", "Grey", "Compact", "Electric", "Automatic", 45),
+            ("VoltEra", "Surge", "Silver", "SUV", "Hybrid", "Automatic", 95),
+            ("Iberia Drive", "Ruta", "White", "Van", "Diesel", "Manual", 75),
+            ("Iberia Drive", "Costa", "Blue", "Coupe", "Gasoline", "Manual", 110),
+            ("Iberia Drive", "Viento", "Red", "Coupe", "Gasoline", "Automatic", 120),
+            ("NovaVelo", "Astro", "Black", "Sedan", "Hybrid", "Automatic", 65),
+            ("NovaVelo", "Pulse", "Grey", "Compact", "Gasoline", "Manual", 40),
+            ("BayerMotive", "Kinetix", "Silver", "Sedan", "Diesel", "Automatic", 70),
+            ("BayerMotive", "Apex", "Black", "SUV", "Gasoline", "Automatic", 130),
+            ("Solano Cars", "Luna", "White", "Compact", "Electric", "Automatic", 50),
+            ("Solano Cars", "Sol", "Red", "Hatchback", "Hybrid", "Manual", 55), # Hatchback은 없으니 Compact으로 대체
+            ("Zenith Auto", "Summit", "Grey", "Truck", "Diesel", "Manual", 90),
+            ("Zenith Auto", "Peak", "Black", "Truck", "Diesel", "Manual", 95),
+            ("Zenith Auto", "Atlas", "Silver", "SUV", "Gasoline", "Automatic", 140),
+            ("Boreal Motors", "Civis", "Blue", "Sedan", "Gasoline", "Manual", 52),
+            ("VoltEra", "Eon", "White", "Sedan", "Electric", "Automatic", 60),
+            ("Iberia Drive", "Giro", "Black", "Compact", "Gasoline", "Manual", 35),
+            ("NovaVelo", "Flow", "Blue", "Sedan", "Hybrid", "Automatic", 68),
+            ("BayerMotive", "Stratos", "Silver", "SUV", "Diesel", "Automatic", 115),
+            ("Solano Cars", "Horizon", "Grey", "SUV", "Hybrid", "Automatic", 88),
+            ("Zenith Auto", "Apex", "Red", "SUV", "Gasoline", "Automatic", 125),
+            ("Boreal Motors", "Nova", "White", "Compact", "Gasoline", "Manual", 38),
+            ("VoltEra", "Spark", "Blue", "Compact", "Electric", "Automatic", 42),
+            ("Iberia Drive", "Rio", "Silver", "Sedan", "Diesel", "Manual", 48),
+            ("NovaVelo", "Orbit", "Black", "SUV", "Hybrid", "Automatic", 105),
+            ("Solano Cars", "Mar", "Blue", "Coupe", "Gasoline", "Manual", 95),
+        ]
 
-        transmissions = ["Automatic", "Manual"]
-        trans_objs = [Transmission.objects.get_or_create(name=name)[0] for name in transmissions]
-
-        self.stdout.write("✅ Lookup tables (Color, Type, Fuel) seeded.")
-
-        # 2. CarModel 생성 (12가지 모델 조합)
-        model_names = ["Corolla", "X5", "Model 3", "Tucson", "Explorer", "Civic", "A4", "Golf", "Mustang", "C-Class"]
-        model_objs = []
-        for i in range(12):
+        # CarModel 생성 및 매핑
+        created_models = []
+        for b_name, m_base, c_name, t_name, f_name, trans_name, price in MODEL_DATA:
+            # 모델명 규칙: Civis_Red
+            full_model_name = f"{m_base}_{c_name}"
+            # 이미지 파일명 규칙: boreal motors_civis_red.jpg (소문자, 공백 유지 혹은 언더바)
+            img_filename = f"{b_name}_{full_model_name}.jpg".lower().replace(" ", "_")
+            
+            # v_type 보정 (Hatchback 등 예외처리)
+            v_type_key = t_name if t_name in SEATS_BY_TYPE else "Sedan"
+            
             model, _ = CarModel.objects.get_or_create(
-                model_name=f"{random.choice(model_names)} v{i}",
-                brand=random.choice(brand_objs),
+                model_name=full_model_name,
+                brand=brand_map[b_name],
                 defaults={
-                    'vehicle_type': random.choice(v_type_objs),
-                    'fuel_type': random.choice(fuel_objs),
-                    'transmission': random.choice(trans_objs),
-                    'seats': random.choice([2, 4, 5, 7]),
-                    'daily_price': Decimal(random.randint(45, 120))
+                    'vehicle_type': vtype_map[v_type_key],
+                    'fuel_type': fuel_map[f_name],
+                    'transmission': trans_map[trans_name],
+                    'seats': SEATS_BY_TYPE[v_type_key],
+                    'daily_price': Decimal(price),
+                    'image': f"car_models/{img_filename}" # media/car_models/ 경로
                 }
             )
-            model_objs.append(model)
-        self.stdout.write(f"✅ {len(model_objs)} Car Models created.")
+            created_models.append((model, c_name))
 
-        # 3. Physical Car 생성 (15대)
-        car_objs = []
-        for i in range(15):
-            car, _ = Car.objects.get_or_create(
-                license_plate=f"{random.randint(1000, 9999)}-{random.choice(['ABC', 'XYZ', 'JWT'])}",
+        # 4. 50개 고정 Car 데이터 (번호판 규칙: 1234 BCD)
+        consonants = "BCDFGHJKLMNPQRSTVWXYZ"
+        for i in range(50):
+            # 30개 모델을 최소 한 번씩 다 쓰고, 나머지 20개는 랜덤
+            model_info = created_models[i] if i < 30 else random.choice(created_models)
+            model_obj, color_name = model_info
+            
+            plate = f"{random.randint(1000, 9999)} {''.join(random.choices(consonants, k=3))}"
+            Car.objects.get_or_create(
+                license_plate=plate,
                 defaults={
-                    'car_model': random.choice(model_objs),
-                    'color': random.choice(color_objs), # 🎨 다양한 컬러 적용
-                    'mileage': random.randint(1000, 60000)
+                    'car_model': model_obj,
+                    'color': color_map[color_name], # 모델명 힌트와 일치시킴
+                    'mileage': random.randint(500, 90000)
                 }
             )
-            car_objs.append(car)
-        self.stdout.write("✅ 15 Physical Cars seeded.")
+        self.stdout.write(f"✅ 30 Models and 50 Cars seeded with fixed rules.")
 
-        # 4. AppUser 생성 (15명)
-        f_names = ["James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph"]
-        l_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson"]
+        # 5. 100+ 명의 스패니쉬 유저 생성
+        first_names = ["Enrique Manuel", "María Josefa", "Juan Carlos", "Lucía Elena", "José Antonio", "Ana María", "Francisco Javier", "Dolores", "Ángel", "Pilar"]
+        last_names_1 = ["López", "García", "Rodríguez", "Sánchez", "Fernández", "González", "Martínez", "Ruiz"]
+        last_names_2 = ["Pérez", "Gómez", "Jiménez", "Díaz", "Álvarez", "Moreno", "Vega", "Serrano"]
         
         user_objs = []
-        for i in range(15):
+        for i in range(110):
             email = f"user{i+1}@example.com"
-            birth_year = random.choice([1955, 1970, 1985, 1995, 2004, 2006])
+            # 나이대 분포 (Young, Standard, Senior)
+            birth_year = random.choice([random.randint(1950, 1960), random.randint(1975, 1995), random.randint(2000, 2007)])
             
             user, created = AppUser.objects.get_or_create(
                 email=email,
                 defaults={
-                    'first_name': f_names[i],
-                    'last_name': l_names[i],
+                    'first_name': random.choice(first_names),
+                    'last_name': f"{random.choice(last_names_1)} {random.choice(last_names_2)}",
                     'birth_date': date(birth_year, random.randint(1,12), random.randint(1,28)),
-                    'license_number': f"LIC-{random.randint(10000, 99999)}"
+                    'license_number': f"{random.randint(10000000, 99999999)}{random.choice('TRWAGMYFPDXBNJZSTQVHLCKE')}"
                 }
             )
             if created:
-                user.set_password("pass1234")
+                user.set_password("Pass1234!")
                 user.save()
             user_objs.append(user)
-        self.stdout.write("✅ 15 Users with hashed passwords seeded.")
+        self.stdout.write(f"✅ 110 Spanish users seeded.")
 
-        # 5. Reservation 생성 (25개)
-        created_res_count = 0
-        for i in range(25):
-            user = random.choice(user_objs)
-            car = random.choice(car_objs)
-            start = date(2026, 2, 1) + timedelta(days=random.randint(1, 45))
-            end = start + timedelta(days=random.randint(1, 5))
+        # 6. 200+ 개의 예약 (유저당 과거 1, 미래 1 보장)
+        today = date.today()
+        cars = list(Car.objects.all())
+        res_count = 0
+        
+        for user in user_objs:
+            # 과거 예약 1개
+            past_start = today - timedelta(days=random.randint(30, 365))
+            # 미래 예약 1개
+            future_start = today + timedelta(days=random.randint(10, 100))
             
-            # Reservation은 중복 검사가 복잡하므로 간단하게 create로 생성
-            try:
-                res = Reservation(
-                    user=user,
-                    car=car,
-                    start_date=start,
-                    end_date=end
-                )
-                res.save() # 여기서 비즈니스 로직(나이별 자동 가격) 실행됨
-                created_res_count += 1
-            except Exception as e:
-                # 겹치는 예약 등 에러 발생 시 건너뛰고 계속 진행
-                continue
+            for start_dt in [past_start, future_start]:
+                car = random.choice(cars)
+                end_dt = start_dt + timedelta(days=random.randint(1, 7))
+                try:
+                    res = Reservation(user=user, car=car, start_date=start_dt, end_date=end_dt)
+                    res.save() # 비즈니스 로직 실행
+                    res_count += 1
+                except Exception:
+                    continue # 날짜 중복 시 건너뜀
 
-        self.stdout.write(self.style.SUCCESS(f"🚀 Successfully seeded all 9 tables! (Reservations: {created_res_count})"))
+        self.stdout.write(self.style.SUCCESS(f"🚀 Final Total: 30 Models, 50 Cars, 110 Users, {res_count} Reservations."))
