@@ -1,46 +1,29 @@
 // renting/static/renting/js/reservation_create.js
 
-function clearErrors() {
+function clearReservationErrors() {
+    // 1. 개별 필드 에러 지우기
     document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
-    const globalError = document.getElementById('global-error');
-    globalError.classList.add('d-none');
-}
-
-/**
- * Validates dates on the client side before sending to server
- */
-function validateDates(startDate, endDate) {
-    const today = new Date().toISOString().split('T')[0];
-    let isValid = true;
-
-    if (startDate < today) {
-        document.getElementById('error-start_date').textContent = "Start date cannot be in the past.";
-        isValid = false;
-    }
-
-    if (endDate < startDate) {
-        document.getElementById('error-end_date').textContent = "End date must be after or equal to start date.";
-        isValid = false;
-    }
-
-    return isValid;
+    // 2. 전역 알림 영역 지우기 (base.html의 컨테이너 접근)
+    const container = document.getElementById('global-alert-container');
+    if (container) container.innerHTML = '';
 }
 
 document.getElementById('res-create-form').onsubmit = async (e) => {
     e.preventDefault();
-    clearErrors();
+    clearReservationErrors();
 
     const submitBtn = e.target.querySelector('button[type="submit"]');
+    const carField = document.getElementById('car-select');
+    const startField = document.getElementById('start_date');
+    const endField = document.getElementById('end_date');
+
     const payload = {
-        car: document.getElementById('car-select').value,
-        start_date: document.getElementById('start_date').value,
-        end_date: document.getElementById('end_date').value
+        car: carField.value,
+        start_date: startField.value,
+        end_date: endField.value
     };
 
-    // 1. Frontend Validation
-    if (!validateDates(payload.start_date, payload.end_date)) return;
-
-    // UI Loading state
+    // UI 상태: 로딩 중
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
 
@@ -50,59 +33,49 @@ document.getElementById('res-create-form').onsubmit = async (e) => {
             body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
-
         if (response && response.ok) {
-            alert("Reservation confirmed!");
-            window.location.href = "/reservations/";
-// renting/static/renting/js/reservation_create.js 내의 에러 처리 로직 부분
+            // ✅ 성공: 팝업 없이 즉시 목록으로 이동 (URL 파라미터로 성공 메시지 전달 가능)
+            window.location.href = "/reservations/?msg=created";
+        } else {
+            // ❌ 실패: 이슈 #49의 중앙 집중식 에러 파서 사용
+            const errors = await Auth.parseError(response);
+            
+            // 1) 기술적 에러 (__all__, non_field_errors) 또는 상세 메시지(detail) 처리
+            const globalMsg = errors.detail || 
+                            (errors.non_field_errors ? errors.non_field_errors[0] : null) ||
+                            (errors.__all__ ? errors.__all__[0] : null);
 
-} else {
-    // 2. Handle Backend Errors (Parsing the 'details' layer)
-    const errors = result.details || result;
-    
-    if (typeof errors === 'string') {
-        const globalError = document.getElementById('global-error');
-        globalError.textContent = errors;
-        globalError.classList.remove('d-none');
-    } else {
-        for (const key in errors) {
-            const errorMessage = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
-
-            // ⚠️ [핵심 수정] 기술적인 키값(__all__, non_field_errors) 처리
-            if (key === '__all__' || key === 'non_field_errors') {
-                const globalError = document.getElementById('global-error');
-                // "__all__:" 접두사 없이 깔끔하게 메시지만 출력
-                globalError.textContent = errorMessage; 
-                globalError.classList.remove('d-none');
-            } else {
-                // 특정 필드 에러 (car, start_date 등) 처리
+            if (globalMsg) {
+                // base.html의 전역 알림 함수 호출
+                showGlobalAlert(globalMsg);
+            } 
+            
+            // 2) 개별 필드 에러 (car, start_date, end_date) 매핑
+            for (const key in errors) {
+                if (key === 'non_field_errors' || key === '__all__' || key === 'detail') continue;
+                
                 const errorEl = document.getElementById(`error-${key}`);
                 if (errorEl) {
-                    errorEl.textContent = errorMessage;
-                } else {
-                    // 필드 ID를 못 찾은 경우에도 글로벌 에러 박스에 표시 (키 생략)
-                    const globalError = document.getElementById('global-error');
-                    globalError.textContent = errorMessage;
-                    globalError.classList.remove('d-none');
+                    errorEl.textContent = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
                 }
             }
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Reserve Now';
         }
-    }
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Reserve Now';
-}
     } catch (error) {
         console.error("Reservation Error:", error);
+        showGlobalAlert("Failed to connect to the server.");
         submitBtn.disabled = false;
         submitBtn.textContent = 'Reserve Now';
     }
 };
 
 /**
- * Initialize page: Load cars and set min date to today
+ * 초기화: 차량 목록 로드 및 날짜 제한 설정
  */
-async function initPage() {
+async function initReservationPage() {
+    // 오늘 이전 날짜 선택 방지
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('start_date').setAttribute('min', today);
     document.getElementById('end_date').setAttribute('min', today);
@@ -118,4 +91,4 @@ async function initPage() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', initPage);
+document.addEventListener('DOMContentLoaded', initReservationPage);
