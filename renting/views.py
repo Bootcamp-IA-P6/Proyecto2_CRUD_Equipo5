@@ -27,6 +27,9 @@ def car_list(request):
 def reservation_list(request):
     return render(request, 'renting/reservations/list.html')
 
+def car_detail(request, id):
+    return render(request, 'renting/cars/detail.html', {'car_id': id})
+
 
 # API Views con JWT
 from rest_framework import viewsets, status
