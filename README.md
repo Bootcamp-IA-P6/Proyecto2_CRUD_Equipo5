@@ -114,8 +114,6 @@ python manage.py runserver
 
 ## 🚀 API Endpoints Overview
 
-For detailed request/response examples and JWT authentication flow, please refer to our [Full API Guide](./API_GUIDE.md).
-
 | Category | Method | Endpoint | Auth Required |
 | :--- | :--- | :--- | :--- |
 | **Auth** | POST | `/api/token/` | No |
@@ -129,7 +127,7 @@ For detailed request/response examples and JWT authentication flow, please refer
 1. Login via `/api/token/` to receive an `access` token.
 2. Include the token in the header: `Authorization: Bearer <your_token>`.
 
-For detailed API usage and JWT authentication flow, please refer to the [API_GUIDE.md](./API_GUIDE.md).
+For detailed API usage and JWT authentication flow, please refer to the [API_GUIDE.md](./docs/API_GUIDE.md).
 
 ---
 
@@ -205,6 +203,11 @@ This diagram represents the final database schema, including business rules for 
 * 🔗 Django REST Framework
 * 🐬 MySQL
 * ⚙️ dotenv
+
+---
+
+## 📄 Project Retrospective
+You can find the full project retrospective and team reflections here: [Project Retrospective](./docs/PROJECT_RETROSPECTIVE.md)
 
 ---
 
