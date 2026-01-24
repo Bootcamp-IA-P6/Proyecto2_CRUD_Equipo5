@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .filters import CarFilter, ReservationFilter
 from rest_framework_simplejwt.tokens import RefreshToken
-from .permissions import IsReservationOwnerOrStaff 
+from .permissions import IsReservationOwnerOrStaff, IsStaffPermission, IsStaffOrReadOnlyPermission 
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
     CarModel, Car, Reservation
@@ -46,13 +46,14 @@ class AppUserViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Action별로 권한을 다르게 설정합니다.
-        - create (회원가입): 누구나 가능 (AllowAny)
-        - 나머지: 로그인 필요 (IsAuthenticated)
+        #61 Staff: view/manage all users
+        Create: AllowAny (signup)
+        List/Retrieve: Staff only
+        Update/Destroy: Staff only
         """
         if self.action == 'create':
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsStaffPermission()]  # ← NUEVO #61
 
     def perform_create(self, serializer):
         # 회원가입 성공 시 로그를 남기는 기존 로직 유지
@@ -111,7 +112,7 @@ class CarModelViewSet(viewsets.ModelViewSet):
 class CarViewSet(viewsets.ModelViewSet):
     queryset = Car.objects.select_related('car_model', 'car_model__brand', 'color').all()
     serializer_class = CarSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffOrReadOnlyPermission] 
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = CarFilter
@@ -158,6 +159,14 @@ class ReservationViewSet(viewsets.ModelViewSet):
             f"Reservation deleted: id={instance.id}, user={instance.user.email}"
         )
         instance.delete()
+
+    def get_permissions(self):
+        """
+        #61 Explicit: OwnerOrStaff para list/retrieve
+        """
+        if self.action in ['list', 'retrieve']:
+            return [IsAuthenticated(), IsReservationOwnerOrStaff()]
+        return [IsAuthenticated()]
 
 def login_view(request):
     return render(request, 'renting/login.html')
