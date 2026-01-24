@@ -1,13 +1,12 @@
 // Use dbdiagram.io to visualize this schema
-// Project: Vehicle Rental Management System
 
 Table app_user {
   id integer [primary key]
   first_name varchar
   last_name varchar
-  email varchar [unique]
+  email email [unique]
   password varchar
-  birth_date date // Required for coverage calculation
+  birth_date date
   license_number varchar
   is_active boolean
   is_staff boolean
@@ -47,7 +46,7 @@ Table car_model {
   seats integer
   fuel_type_id integer
   transmission_id integer
-  daily_price decimal // Base for total_price calculation
+  daily_price decimal
   image varchar
 }
 
@@ -63,14 +62,14 @@ Table reservation {
   id integer [primary key]
   start_date date
   end_date date
-  coverage varchar // Determined by birth_date
-  rate decimal // Used in: total_price = daily_price * rate
+  coverage varchar
+  rate decimal
   total_price decimal
   user_id integer
   car_id integer
 }
 
-// Relationships (Foreign Keys)
+// Relaciones (Foreign Keys)
 Ref: car_model.brand_id > brand.id
 Ref: car_model.vehicle_type_id > vehicle_type.id
 Ref: car_model.fuel_type_id > fuel_type.id
