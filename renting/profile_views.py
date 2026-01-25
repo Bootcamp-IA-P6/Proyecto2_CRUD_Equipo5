@@ -50,14 +50,14 @@ class ProfileView(APIView):
         # Validar que se proporcione la contraseña actual
         if not current_password:
             return Response(
-                {"error": "Se requiere current_password para modificar el perfil"},
+                {"error": "current_password is required to update profile"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         # Verificar que la contraseña sea correcta
         if not request.user.check_password(current_password):
             return Response(
-                {"error": "Contraseña actual incorrecta"},
+                {"error": "Invalid current password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -85,13 +85,13 @@ class ProfileView(APIView):
         
         if not password:
             return Response(
-                {"error": "Se requiere password para eliminar la cuenta"},
+                {"error": "Password is required to delete account"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         if not request.user.check_password(password):
             return Response(
-                {"error": "Contraseña incorrecta"},
+                {"error": "Invalid password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -99,7 +99,7 @@ class ProfileView(APIView):
         request.user.delete()
         logger.info(f"User self-deleted: {user_email}")
         return Response(
-            {"detail": "Cuenta eliminada exitosamente"}, 
+            {"detail": "Account successfully deleted"}, 
             status=status.HTTP_204_NO_CONTENT
         )
 
@@ -119,20 +119,20 @@ class ChangePasswordView(APIView):
         
         if not old_password or not new_password:
             return Response(
-                {"error": "Se requieren old_password y new_password"},
+                {"error": "old_password and new_password are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         if not request.user.check_password(old_password):
             return Response(
-                {"error": "Contraseña actual incorrecta"},
+                {"error": "Invalid current password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         # Validación: mínimo 8 caracteres
         if len(new_password) < 8:
             return Response(
-                {"error": "La nueva contraseña debe tener al menos 8 caracteres"},
+                {"error": "New password must be at least 8 characters long"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -140,4 +140,4 @@ class ChangePasswordView(APIView):
         request.user.save()
         logger.info(f"Password changed for user: {request.user.email}")
         
-        return Response({"detail": "Contraseña actualizada exitosamente"})
+        return Response({"detail": "Password updated successfully"})
