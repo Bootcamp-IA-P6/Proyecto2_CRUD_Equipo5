@@ -1,3 +1,4 @@
+<!-- templates/renting/base.html -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -6,60 +7,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rental System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'renting/css/style.css' %}">
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'home' %}">Rental System</a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" href="{% url 'car_list' %}">Cars</a>
-                <a class="nav-link" href="{% url 'reservation_list' %}">Reservations</a>
-            </div>
-            <div class="navbar-nav" id="nav-auth-section"></div>
-        </div>
+<body>
+    <!-- Top Nav -->
+    <nav class="top-navbar d-flex justify-content-between">
+        <a href="/" class="brand-logo">RENTAL.SYS</a>
+        <!-- 우측 토글 버튼 -->
+        <button class="nav-toggle-btn" onclick="toggleSidebar()">☰</button>
     </nav>
 
-    <div class="container">
-        <!-- ⚠️ 전역 알림 영역 -->
-        <div id="global-alert-container"></div>
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+        <div id="global-alert-container" class="container mt-3"></div>
         {% block content %}{% endblock %}
     </div>
 
+    <!-- ⚠️ Slim & Professional Footer -->
+    <footer class="site-footer">
+        <div class="container-fluid px-5 d-flex justify-content-between align-items-center">
+            <div>
+                <strong>RENTAL.SYS</strong> <span class="mx-2">|</span> © 2026 Team 5 Project
+            </div>
+            <div class="d-none d-md-block">
+                Vehicle Rental Management Platform
+            </div>
+        </div>
+    </footer>
+
+    <!-- Sidebar 부분 수정 -->
+    <aside class="right-sidebar" id="main-sidebar">
+        <div id="sidebar-auth-content">
+            <!-- JS가 <ul> 리스트를 채웁니다 -->
+        </div>
+    </aside>
+
     <script src="{% static 'renting/js/auth.js' %}"></script>
-    <script>
-        // 전역 알림 함수
-        function showGlobalAlert(message, type = 'danger') {
-            const container = document.getElementById('global-alert-container');
-            container.innerHTML = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // 네비게이션 바 상태 업데이트
-            const section = document.getElementById('nav-auth-section');
-            if (Auth.isLoggedIn()) {
-                section.innerHTML = `
-                    <span class="nav-link text-light">User Mode</span>
-                    <button class="btn btn-outline-danger btn-sm ms-2" onclick="logout()">Logout</button>
-                `;
-            } else {
-                section.innerHTML = `
-                    <a class="nav-link" href="{% url 'register' %}">Register</a>
-                    <a class="nav-link" href="{% url 'login' %}">Login</a>
-                `;
-            }
-
-            // 보호된 페이지 가드
-            const path = window.location.pathname;
-            const isPublic = path === '/' || path.includes('/login/') || path.includes('/register/');
-            if (!Auth.isLoggedIn() && !isPublic) {
-                window.location.href = "/login/?reason=expired";
-            }
-        });
-    </script>
+    <script src="{% static 'renting/js/layout.js' %}"></script>
 </body>
 </html>

@@ -52,35 +52,34 @@ const Auth = {
 };
 
 /**
- * 모든 API 요청에서 사용할 래퍼 함수 (토큰 자동 주입 + 만료 시 자동 갱신)
+ * [UPGRADED] Guest-aware fetch wrapper
  */
 async function fetchWithAuth(url, options = {}) {
-    let tokens = Auth.getTokens();
-    if (!tokens) {
-        window.location.href = "/login/?reason=expired";
-        return null;
-    }
-
-    // 기본 헤더 설정
+    const tokens = Auth.getTokens();
+    
     if (!options.headers) options.headers = {};
-    options.headers['Authorization'] = `Bearer ${tokens.access}`;
     options.headers['Content-Type'] = 'application/json';
+
+    // ⚠️ 수정: 토큰이 있을 때만 헤더에 추가 (없어도 리다이렉트 안 함)
+    if (tokens && tokens.access) {
+        options.headers['Authorization'] = `Bearer ${tokens.access}`;
+    }
 
     let response = await fetch(url, options);
 
-    // 401 Unauthorized 발생 시 토큰 갱신 시도
-    if (response.status === 401) {
+    // 401(만료) 발생 시에만 리프레시 시도
+    if (response.status === 401 && tokens && tokens.refresh) {
         const refreshed = await Auth.refreshAccessToken();
         if (refreshed) {
-            // 갱신 성공 시 새 토큰으로 딱 한 번 더 재시도
-            tokens = Auth.getTokens();
-            options.headers['Authorization'] = `Bearer ${tokens.access}`;
+            const newTokens = Auth.getTokens();
+            options.headers['Authorization'] = `Bearer ${newTokens.access}`;
             response = await fetch(url, options);
         } else {
-            // 갱신 실패 시 로그아웃
+            // 진짜 만료된 경우만 로그인으로
             Auth.clear();
-            window.location.href = "/login/?reason=expired";
-            return null;
+            if (window.location.pathname !== '/') {
+                window.location.href = "/login/?reason=expired";
+            }
         }
     }
     return response;

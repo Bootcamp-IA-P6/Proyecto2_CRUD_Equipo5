@@ -1,0 +1,206 @@
+/* renting/static/renting/css/style.css */
+:root {
+    --primary-color: #0f172a;
+    --accent-color: #f59e0b;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --sidebar-width: 280px;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, sans-serif;
+    margin: 0;
+}
+
+/* 1. Top Navigation */
+.top-navbar {
+    height: 60px;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+.brand-logo {
+    color: white;
+    font-weight: 800;
+    font-size: 1.5rem;
+    text-decoration: none;
+    letter-spacing: -1px;
+}
+
+/* 2. Sidebar (Right) */
+.right-sidebar {
+    position: fixed;
+    right: -300px; /* 초기 위치: 화면 밖 */
+    top: 60px;
+    width: 300px;
+    height: calc(100vh - 60px);
+    background: white;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+    transition: right 0.3s ease; /* 애니메이션 효과 */
+    z-index: 1050;
+    padding: 2rem 1.5rem;
+}
+
+.right-sidebar.active {
+    right: 0;
+}
+
+/* 사이드바 메뉴 리스트 스타일 (버전업!) */
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar-menu li {
+    margin-bottom: 10px; /* 아이템 간격 */
+}
+/* <a>와 <button>을 동일한 디자인으로 통일 */
+.sidebar-menu a, 
+.sidebar-menu button {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: #f8fafc; /* 아주 연한 회색 배경 */
+    color: #1e293b !important;
+    text-decoration: none !important; /* ⚠️ 밑줄 절대 금지 */
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+.sidebar-menu a:hover, .sidebar-menu button:hover {
+    background-color: #f1f5f9;
+    color: var(--primary-color);
+}
+/* 사이드바 이모지/아이콘 기본화 */
+.sidebar-menu li span {
+    filter: grayscale(100%); /* 모든 이콘을 흑백으로 */
+    margin-right: 10px;
+}
+
+/* 강조 컬러 (Amber) 가 들어간 메뉴 */
+.menu-accent {
+    color: var(--accent-color) !important;
+    font-weight: 600;
+}
+
+/* 마우스 올렸을 때 (Hover) */
+.sidebar-menu a:hover, 
+.sidebar-menu button:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    color: var(--primary-color) !important;
+    transform: translateX(5px); /* 오른쪽으로 살짝 밀리는 효과 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* 강조 버튼 (Book Now 등) */
+.sidebar-menu .menu-accent {
+    background-color: #fffbeb; /* 따뜻한 노란빛 */
+    border-color: var(--accent-color);
+    color: #b45309 !important;
+    font-weight: 700;
+}
+
+/* 로그아웃 버튼 전용 스타일 */
+.sidebar-menu .text-danger {
+    background-color: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626 !important;
+}
+
+.sidebar-menu .text-danger:hover {
+    background-color: #fee2e2;
+    border-color: #f87171;
+}
+
+/* 3. Main Content */
+.main-wrapper {
+    margin-top: 60px;
+    margin-right: 0; 
+    padding: 2rem;
+    transition: margin-right 0.3s ease;
+    min-height: calc(100vh - 110px); /* 뷰포트에서 상단바와 푸터 높이를 뺀 만큼 최소 높이 보장 */
+    padding-bottom: 0;
+}
+
+/* 토글 버튼 (햄버거 아이콘) */
+.nav-toggle-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* 4. Vehicle Cards */
+.vehicle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+.vehicle-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    transition: transform 0.2s;
+}
+.vehicle-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+.card-img-wrapper {
+    height: 180px;
+    background: #f1f5f9;
+}
+.card-img-wrapper img {
+    width: 100%; height: 100%; object-fit: cover;
+}
+.card-info { padding: 1.25rem; }
+.price-tag {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* 5. Buttons */
+.btn-primary { background-color: var(--primary-color); border: none; }
+.btn-primary:hover { background-color: #1e293b; }
+.btn-accent { background-color: var(--accent-color); border: none; color: white; font-weight: 600; }
+
+
+/* 실제 푸터 스타일 */
+.site-footer {
+    height: 50px; /* 높이 고정 */
+    background-color: #ffffff;
+    border-top: 1px solid #edf2f7;
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem; /* 글자 크기 축소 */
+    color: #94a3b8; /* 더 연한 회색 */
+    transition: margin-right 0.3s ease;
+}
+
+/* 사이드바가 열렸을 때 푸터도 밀어주기 */
+.right-sidebar.active ~ .site-footer {
+    margin-right: 300px;
+}
+
+/* 무한 스크롤 감지용 센티널 (바닥 체크용) */
+#scroll-sentinel {
+    height: 50px;
+}
