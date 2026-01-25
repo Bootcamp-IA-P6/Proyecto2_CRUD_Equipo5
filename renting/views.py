@@ -2,7 +2,8 @@ import logging
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
+from rest_framework import filters, status
+from django.utils import timezone
 from .filters import CarFilter, ReservationFilter
 from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsReservationOwnerOrStaff, IsStaffPermission, IsStaffOrReadOnlyPermission 
@@ -42,39 +43,73 @@ from .serializers import (
 class AppUserViewSet(viewsets.ModelViewSet):
     queryset = AppUser.objects.all()
     serializer_class = AppUserSerializer
-    # permission_classes = [IsAuthenticated]  
 
     def get_permissions(self):
         """
-        #61 Staff: view/manage all users
-        Create: AllowAny (signup)
-        List/Retrieve: Staff only
-        Update/Destroy: Staff only
+        #61 Staff + #62 My Page - Permissions por acción
         """
         if self.action == 'create':
             return [AllowAny()]
-        return [IsStaffPermission()]  # ← NUEVO #61
+        elif self.action in ['me', 'update_me', 'change_password', 'delete_me']:
+            return [IsAuthenticated()]
+        return [IsStaffPermission()]
 
     def perform_create(self, serializer):
-        # 회원가입 성공 시 로그를 남기는 기존 로직 유지
         user = serializer.save()
         logger.info(f"User created: {user.email}")
 
     def perform_destroy(self, instance):
-        # 삭제 시 로그를 남기는 기존 로직 유지
         logger.info(f"User deleted: {instance.email}")
         instance.delete()
 
     @action(detail=False, methods=['get'])
     def me(self, request):
-        # 현재 로그인한 유저 정보를 반환하는 기존 로직 유지
+        """#62 GET /api/users/me/ → Perfil actual"""
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
     def get_serializer_class(self):
         if self.action == 'create':
-            return AppUserSignupSerializer  # Strict validation
-        return AppUserSerializer  # Normal para list/retrieve
+            return AppUserSignupSerializer
+        return AppUserSerializer
+
+    @action(detail=False, methods=['put'], url_path='me')
+    def update_me(self, request):
+        """#62 PUT /api/users/me/ → Update perfil + password"""
+        password = request.data.pop('current_password', None)
+        if not request.user.check_password(password):
+            return Response({"detail": "Invalid current password"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = self.get_serializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='me/change-password')
+    def change_password(self, request):
+        """#62 POST /api/users/me/change-password/"""
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        
+        if not request.user.check_password(current_password):
+            return Response({"detail": "Invalid current password"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if len(new_password) < 8:
+            return Response({"detail": "New password too short (min 8 chars)"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        request.user.set_password(new_password)
+        request.user.save()
+        return Response({"message": "Password changed successfully"})
+
+    @action(detail=False, methods=['delete'], url_path='me')
+    def delete_me(self, request):
+        """#62 DELETE /api/users/me/ → Delete account + password"""
+        password = request.data.get('password')
+        if not request.user.check_password(password):
+            return Response({"detail": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        request.user.delete()
+        return Response({"message": "Account deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
 class VehicleTypeViewSet(viewsets.ModelViewSet):
@@ -167,6 +202,43 @@ class ReservationViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return [IsAuthenticated(), IsReservationOwnerOrStaff()]
         return [IsAuthenticated()]
+
+    @action(detail=False, methods=['get'], url_path='my')
+    def my_reservations(self, request):
+        """#62 GET /api/reservations/my/?status=upcoming|past"""
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        status = request.query_params.get('status')
+        now = timezone.now().date()
+        if status == 'upcoming':
+            queryset = queryset.filter(start_date__gte=now)
+        elif status == 'past':
+            queryset = queryset.filter(end_date__lt=now)
+        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['delete'], url_path='delete-with-password')
+    def delete_with_password(self, request, pk=None):
+        """#62 DELETE /api/reservations/{id}/delete-with-password/"""
+        reservation = self.get_object()
+        
+        # Past reservations read-only
+        if reservation.end_date < timezone.now().date():
+            return Response({"detail": "Past reservations cannot be deleted"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Password confirmation
+        password = request.data.get('password')
+        if not request.user.check_password(password):
+            return Response({"detail": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        self.perform_destroy(reservation)
+        return Response({"message": "Reservation deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 def login_view(request):
     return render(request, 'renting/login.html')
