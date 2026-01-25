@@ -30,8 +30,8 @@ def reservation_list(request):
 
 
 # API Views con JWT
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .serializers import (
@@ -40,19 +40,55 @@ from .serializers import (
     CarModelSerializer, CarSerializer, ReservationSerializer, AppUserSignupSerializer
 )
 
+
+# Permiso personalizado para el ViewSet de usuarios
+class IsOwnerOrStaffOrCreateOnly(BasePermission):
+    """
+    - Cualquiera puede registrarse (create)
+    - Usuarios autenticados pueden acceder a /me/
+    - Solo staff puede list/retrieve/update/delete otros usuarios
+    """
+    
+    def has_permission(self, request, view):
+        # Permitir registro sin autenticación
+        if view.action == 'create':
+            return True
+        
+        # Todas las acciones personalizadas (me, update_me, etc.) requieren autenticación
+        if view.action in ['me', 'update_me', 'delete_me', 'change_password']:
+            # CRÍTICO: Verificar que el usuario está autenticado Y activo
+            return (
+                request.user 
+                and request.user.is_authenticated 
+                and getattr(request.user, 'is_active', True)
+            )
+        
+        # list, retrieve, update, destroy requieren staff
+        return (
+            request.user 
+            and request.user.is_authenticated 
+            and request.user.is_staff 
+            and getattr(request.user, 'is_active', True)
+        )
+    
+    def has_object_permission(self, request, view, obj):
+        # Staff puede todo
+        if request.user.is_staff:
+            return True
+        
+        # Usuarios solo pueden modificar su propia cuenta
+        return obj == request.user
+
+
 class AppUserViewSet(viewsets.ModelViewSet):
     queryset = AppUser.objects.all()
     serializer_class = AppUserSerializer
+    permission_classes = [IsOwnerOrStaffOrCreateOnly]
 
-    def get_permissions(self):
-        """
-        #61 Staff + #62 My Page - Permissions por acción
-        """
+    def get_serializer_class(self):
         if self.action == 'create':
-            return [AllowAny()]
-        elif self.action in ['me', 'update_me', 'change_password', 'delete_me']:
-            return [IsAuthenticated()]
-        return [IsStaffPermission()]
+            return AppUserSignupSerializer
+        return AppUserSerializer
 
     def perform_create(self, serializer):
         user = serializer.save()
@@ -62,54 +98,130 @@ class AppUserViewSet(viewsets.ModelViewSet):
         logger.info(f"User deleted: {instance.email}")
         instance.delete()
 
-    @action(detail=False, methods=['get'])
+    # ==========================================
+    # ENDPOINTS /me/
+    # ==========================================
+    
+    @action(detail=False, methods=['get'], url_path='me')
     def me(self, request):
-        """#62 GET /api/users/me/ → Perfil actual"""
+        """
+        GET /api/users/me/
+        Obtiene información del usuario actual
+        """
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return AppUserSignupSerializer
-        return AppUserSerializer
-
-    @action(detail=False, methods=['put'], url_path='me')
+    @action(detail=False, methods=['put', 'patch'], url_path='me')
     def update_me(self, request):
-        """#62 PUT /api/users/me/ → Update perfil + password"""
-        password = request.data.pop('current_password', None)
-        if not request.user.check_password(password):
-            return Response({"detail": "Invalid current password"}, status=status.HTTP_400_BAD_REQUEST)
+        """
+        PUT/PATCH /api/users/me/
+        Actualiza información del usuario actual
         
-        serializer = self.get_serializer(request.user, data=request.data, partial=True)
+        IMPORTANTE: Se requiere current_password para cambios de seguridad
+        """
+        # Validar current_password si está presente
+        current_password = request.data.get('current_password')
+        
+        # Si intenta cambiar email o campos sensibles, requerir contraseña
+        sensitive_fields = {'email', 'password'}
+        is_sensitive_update = any(field in request.data for field in sensitive_fields)
+        
+        if is_sensitive_update and not current_password:
+            return Response(
+                {"error": "Se requiere current_password para cambios sensibles"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if current_password:
+            if not request.user.check_password(current_password):
+                return Response(
+                    {"error": "Contraseña actual incorrecta"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Crear una copia de los datos sin current_password
+        data = request.data.copy()
+        if 'current_password' in data:
+            data.pop('current_password')
+        
+        serializer = self.get_serializer(
+            request.user, 
+            data=data, 
+            partial=request.method == 'PATCH'
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        logger.info(f"User updated: {request.user.email}")
         return Response(serializer.data)
-
-    @action(detail=False, methods=['post'], url_path='me/change-password')
-    def change_password(self, request):
-        """#62 POST /api/users/me/change-password/"""
-        current_password = request.data.get('current_password')
-        new_password = request.data.get('new_password')
-        
-        if not request.user.check_password(current_password):
-            return Response({"detail": "Invalid current password"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if len(new_password) < 8:
-            return Response({"detail": "New password too short (min 8 chars)"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        request.user.set_password(new_password)
-        request.user.save()
-        return Response({"message": "Password changed successfully"})
 
     @action(detail=False, methods=['delete'], url_path='me')
     def delete_me(self, request):
-        """#62 DELETE /api/users/me/ → Delete account + password"""
-        password = request.data.get('password')
-        if not request.user.check_password(password):
-            return Response({"detail": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST)
+        """
+        DELETE /api/users/me/
+        Elimina la cuenta del usuario actual
         
-        request.user.delete()
-        return Response({"message": "Account deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        Body: { "password": "..." }
+        """
+        password = request.data.get('password')
+        
+        if not password:
+            return Response(
+                {"error": "Se requiere password para eliminar la cuenta"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not request.user.check_password(password):
+            return Response(
+                {"error": "Contraseña incorrecta"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user = request.user
+        logger.info(f"User self-deleted: {user.email}")
+        user.delete()
+        return Response(
+            {"detail": "Cuenta eliminada exitosamente"}, 
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+    @action(detail=False, methods=['post'], url_path='me/change-password')
+    def change_password(self, request):
+        """
+        POST /api/users/me/change-password/
+        Cambia la contraseña del usuario actual
+        
+        Body: {
+            "old_password": "...",
+            "new_password": "..."
+        }
+        """
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+        
+        if not old_password or not new_password:
+            return Response(
+                {"error": "Se requieren old_password y new_password"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not request.user.check_password(old_password):
+            return Response(
+                {"error": "Contraseña actual incorrecta"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validación básica de nueva contraseña
+        if len(new_password) < 8:
+            return Response(
+                {"error": "La nueva contraseña debe tener al menos 8 caracteres"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        request.user.set_password(new_password)
+        request.user.save()
+        logger.info(f"Password changed for user: {request.user.email}")
+        
+        return Response({"detail": "Contraseña actualizada exitosamente"})
 
 
 class VehicleTypeViewSet(viewsets.ModelViewSet):
@@ -167,7 +279,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         'user', 'car', 'car__car_model', 'car__car_model__brand'
     ).all()
     serializer_class = ReservationSerializer
-    permission_classes = [IsAuthenticated, IsReservationOwnerOrStaff]  # ← CAMBIAR
+    permission_classes = [IsAuthenticated, IsReservationOwnerOrStaff]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ReservationFilter
@@ -208,11 +320,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
         """#62 GET /api/reservations/my/?status=upcoming|past"""
         queryset = self.filter_queryset(self.get_queryset())
         
-        status = request.query_params.get('status')
+        status_param = request.query_params.get('status')
         now = timezone.now().date()
-        if status == 'upcoming':
+        if status_param == 'upcoming':
             queryset = queryset.filter(start_date__gte=now)
-        elif status == 'past':
+        elif status_param == 'past':
             queryset = queryset.filter(end_date__lt=now)
         
         page = self.paginate_queryset(queryset)
@@ -230,21 +342,30 @@ class ReservationViewSet(viewsets.ModelViewSet):
         
         # Past reservations read-only
         if reservation.end_date < timezone.now().date():
-            return Response({"detail": "Past reservations cannot be deleted"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Past reservations cannot be deleted"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Password confirmation
         password = request.data.get('password')
         if not request.user.check_password(password):
-            return Response({"detail": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Invalid password"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         self.perform_destroy(reservation)
-        return Response({"message": "Reservation deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"message": "Reservation deleted successfully"}, 
+            status=status.HTTP_204_NO_CONTENT
+        )
+
 
 def login_view(request):
     return render(request, 'renting/login.html')
 
 def logout_view(request):
-    # 세션 기반 로그아웃 대신 프론트엔드에서 처리하도록 유도 (나중에 삭제 가능)
     return redirect('login')
 
 def register_view(request):
@@ -252,5 +373,3 @@ def register_view(request):
 
 def reservation_create(request):
     return render(request, 'renting/reservations/create.html')
-
-# temp change to trigger git

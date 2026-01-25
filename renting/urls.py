@@ -6,6 +6,7 @@ from .views import (
     ColorViewSet, TransmissionViewSet, CarModelViewSet, CarViewSet,
     ReservationViewSet
 )
+from .profile_views import ProfileView, ChangePasswordView  # ← NUEVO
 
 router = DefaultRouter()
 router.register(r'users', AppUserViewSet)
@@ -19,13 +20,29 @@ router.register(r'cars', CarViewSet)
 router.register(r'reservations', ReservationViewSet)
 
 urlpatterns = [
+    # ==========================================
+    # HTML Views (templates)
+    # ==========================================
     path('', views.home, name='home'),
     path('users/', views.user_list, name='user_list'),
     path('cars/', views.car_list, name='car_list'),
     path('reservations/', views.reservation_list, name='reservation_list'),
-    path('reservations/create/', views.reservation_create, name='reservation_create'),    path('api/', include(router.urls)),
-    # -- login -- #
+    path('reservations/create/', views.reservation_create, name='reservation_create'),
+    
+    # ==========================================
+    # Auth HTML Views
+    # ==========================================
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    
+    # ==========================================
+    # API Endpoints
+    # ==========================================
+    # Profile management (usuario actual) ← NUEVO
+    path('api/profile/me/', ProfileView.as_view(), name='profile-me'),
+    path('api/profile/me/change-password/', ChangePasswordView.as_view(), name='profile-change-password'),
+    
+    # REST API (ViewSets)
+    path('api/', include(router.urls)),
 ]

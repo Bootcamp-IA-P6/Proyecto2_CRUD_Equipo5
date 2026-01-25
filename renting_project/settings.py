@@ -52,9 +52,13 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
+    
+    # CONFLICTO: DRF aplica IsAuthenticated primero y bloquea @action, se ha probado a comentarlo
+    # para comprobar si funciona bien la autenticación personalizada en views.py
+
+    #'DEFAULT_PERMISSION_CLASSES': [
+    #    'rest_framework.permissions.IsAuthenticated',
+    #],
     'EXCEPTION_HANDLER': 'renting.exceptions.custom_exception_handler',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
