@@ -3,6 +3,41 @@
 let nextPageUrl = '/api/cars/';
 let isLoading = false;
 
+function getFilterParams() {
+    const params = new URLSearchParams();
+    
+    // 기본 검색 및 정렬
+    const search = document.getElementById('search-input').value;
+    const sort = document.getElementById('sort-order').value;
+    if (search) params.append('search', search);
+    if (sort) params.append('ordering', sort);
+
+    // 날짜 가용성
+    const from = document.getElementById('available-from').value;
+    const to = document.getElementById('available-to').value;
+    if (from) params.append('available_from', from);
+    if (to) params.append('available_to', to);
+
+    // 상세 스펙
+    const type = document.getElementById('filter-type').value;
+    const trans = document.getElementById('filter-trans').value;
+    const seats = document.getElementById('filter-seats').value;
+
+    if (type) params.append('car_model__vehicle_type', type);
+    if (trans) params.append('transmission', trans);
+    if (seats) params.append('seats', seats);
+
+    return params.toString();
+}
+
+/**
+ * 필터 초기화
+ */
+function clearAllFilters() {
+    document.querySelectorAll('.form-control, .form-select').forEach(el => el.value = '');
+    loadVehicles(true);
+}
+
 async function loadVehicleTypes() {
     const res = await fetch('/api/vehicle-types/');
     if (res.ok) {
@@ -22,12 +57,11 @@ async function loadVehicles(reset = false) {
     if (isLoading || (!nextPageUrl && !reset)) return;
     
     isLoading = true;
-    toggleUIState(true); // 로딩 UI 켜기
+    toggleUIState(true);
 
     if (reset) {
-        const search = document.getElementById('search-input').value;
-        const type = document.getElementById('filter-type').value;
-        nextPageUrl = `/api/cars/?search=${search}&car_model__vehicle_type=${type}`;
+        const queryString = getFilterParams();
+        nextPageUrl = `/api/cars/?${queryString}`;
         document.getElementById('vehicle-list').innerHTML = '';
     }
     
