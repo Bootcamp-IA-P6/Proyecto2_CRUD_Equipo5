@@ -170,17 +170,22 @@ class CarSerializer(serializers.ModelSerializer):
     brand_name = serializers.CharField(source='car_model.brand.name', read_only=True)
     color_name = serializers.CharField(source='color.name', read_only=True)
     car_model_image = serializers.ImageField(source='car_model.image', read_only=True)
+
+    # -- added for frontend -- # 
     daily_price = serializers.ReadOnlyField(source='car_model.daily_price')
+    seats = serializers.ReadOnlyField(source='car_model.seats')
+    transmission_name = serializers.ReadOnlyField(source='car_model.transmission.name')
+    fuel_type_name = serializers.ReadOnlyField(source='car_model.fuel_type.name')
+    vehicle_type_name = serializers.ReadOnlyField(source='car_model.vehicle_type.name')
+
 
     class Meta:
         model = Car
         fields = [
             'id', 'car_model', 'car_model_name', 'brand_name', 
-            'license_plate', 'color', 'color_name', 'mileage', 
-            'car_model_image', 'daily_price'
+            'license_plate', 'color_name', 'mileage', 'car_model_image', 
+            'daily_price', 'seats', 'transmission_name', 'fuel_type_name', 'vehicle_type_name'
         ]
-    
-    # (Aquí ya no hace falta el validate_price porque el precio está en CarModel)
 
 
 from rest_framework import serializers

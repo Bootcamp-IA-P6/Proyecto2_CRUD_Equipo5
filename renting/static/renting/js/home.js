@@ -56,21 +56,24 @@ function renderCards(items) {
     items.forEach(c => {
         const card = document.createElement('div');
         card.className = 'vehicle-card';
+        // 카드 전체 혹은 이미지 클릭 시 상세페이지로 이동하도록 <a> 태그 감싸기
         card.innerHTML = `
-            <div class="card-img-wrapper">
-                <img src="${c.car_model_image || '/static/renting/images/cars/placeholder.png'}" alt="${c.car_model_name}">
-            </div>
+            <a href="/cars/${c.id}/" class="text-decoration-none">
+                <div class="card-img-wrapper">
+                    <img src="${c.car_model_image || '/static/renting/images/cars/placeholder.png'}" alt="${c.car_model_name}">
+                </div>
+            </a>
             <div class="card-info">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
                         <span class="text-muted small text-uppercase fw-bold">${c.brand_name}</span>
-                        <h5 class="mb-0">${c.car_model_name}</h5>
+                        <h5 class="mb-0 text-dark">${c.car_model_name}</h5>
                     </div>
-                    <span class="badge bg-light text-dark border">${c.color_name}</span>
                 </div>
                 <hr>
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="price-tag">${c.daily_price || '0'}€ <small class="text-muted fw-normal" style="font-size: 0.7rem;">/day</small></span>
+                    <!-- ⚠️ 딥링크: 예약 생성 시 car ID 전달 -->
                     <a href="/reservations/create/?car=${c.id}" class="btn btn-accent btn-sm px-3">Book Now</a>
                 </div>
             </div>

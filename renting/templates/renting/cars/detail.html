@@ -1,0 +1,71 @@
+{% extends 'renting/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Explore</a></li>
+            <li class="breadcrumb-item active" id="breadcrumb-model">Vehicle Detail</li>
+        </ol>
+    </nav>
+
+    <div class="row g-5">
+        <!-- Left: Image Carousel -->
+        <div class="col-lg-7">
+            <div id="carCarousel" class="carousel slide bg-white p-2 rounded shadow-sm" data-bs-ride="carousel">
+                <!-- ⚠️ 내부를 비워두고 JS에서 채웁니다 -->
+                <div class="carousel-inner" id="carousel-images">
+                    <div class="text-center p-5">
+                        <div class="spinner-border text-secondary" role="status"></div>
+                    </div>
+                </div>
+                
+                <!-- 컨트롤 버튼들 -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#carCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Specs -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm p-4 h-100">
+                <h6 id="car-brand" class="text-uppercase text-muted mb-1 fw-bold">Loading...</h6>
+                <h2 id="car-name" class="display-6 fw-bold mb-4">-</h2>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center border">
+                            <small class="text-muted d-block">Daily Rate</small>
+                            <strong id="car-price" class="fs-4 text-primary">0€</strong>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center border">
+                            <small class="text-muted d-block">Seats</small>
+                            <strong id="car-seats" class="fs-4">-</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item d-flex justify-content-between"><span>Vehicle Type</span><span id="car-vtype" class="fw-bold">-</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Transmission</span><span id="car-trans" class="fw-bold">-</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Fuel Type</span><span id="car-fuel" class="fw-bold">-</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>License Plate</span><span id="car-plate" class="text-uppercase fw-bold">-</span></li>
+                </ul>
+
+                <a id="reserve-link" href="#" class="btn btn-accent btn-lg w-100 py-3 shadow-sm mt-auto">
+                    ⚡ Reserve This Vehicle
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'renting/js/car_detail.js' %}"></script>
+{% endblock %}
