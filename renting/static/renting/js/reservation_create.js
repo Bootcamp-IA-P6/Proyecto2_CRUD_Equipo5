@@ -43,7 +43,12 @@ document.getElementById('res-create-form').onsubmit = async (e) => {
         });
 
         if (response && response.ok) {
-            window.location.href = "/reservations/?msg=success";
+            // 메시지와 함께 예약 목록으로 리다이렉트
+            window.redirectWithMsg(
+                "/reservations/", 
+                "Your reservation has been confirmed successfully! 🚗", 
+                "success"
+            );
         } else {
             const errors = await Auth.parseError(response);
             const globalMsg = errors.detail || 

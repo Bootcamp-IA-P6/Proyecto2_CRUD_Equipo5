@@ -1,5 +1,6 @@
 // renting/static/renting/js/auth.js
 
+
 /**
  * [FIX] 전역 알림 함수 정의 (ReferenceError 방지)
  */
@@ -115,3 +116,26 @@ function logout() {
     Auth.clear();
     window.location.href = "/login/";
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const pendingMsg = sessionStorage.getItem('post_redirect_msg');
+    const pendingType = sessionStorage.getItem('post_redirect_type');
+
+    if (pendingMsg) {
+        // 이미 정의된 전역 알림 함수 호출
+        window.showGlobalAlert(pendingMsg, pendingType || 'success');
+        
+        // 메시지 소모 후 삭제 (새로고침 시 또 뜨지 않게)
+        sessionStorage.removeItem('post_redirect_msg');
+        sessionStorage.removeItem('post_redirect_type');
+    }
+});
+
+/**
+ * 메시지를 저장하고 페이지를 이동시키는 헬퍼 함수
+ */
+window.redirectWithMsg = function(url, message, type = 'success') {
+    sessionStorage.setItem('post_redirect_msg', message);
+    sessionStorage.setItem('post_redirect_type', type);
+    window.location.href = url;
+};
