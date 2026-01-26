@@ -10,16 +10,17 @@ from .profile_views import ProfileView, ChangePasswordView
 
 
 # API Router for ViewSets
+# Router con basenames explícitos
 router = DefaultRouter()
-router.register(r'users', AppUserViewSet)
-router.register(r'vehicle-types', VehicleTypeViewSet)
-router.register(r'brands', BrandViewSet)
-router.register(r'fuel-types', FuelTypeViewSet)
-router.register(r'colors', ColorViewSet)
-router.register(r'transmissions', TransmissionViewSet)
-router.register(r'car-models', CarModelViewSet)
-router.register(r'cars', CarViewSet)
-router.register(r'reservations', ReservationViewSet)
+router.register(r'users', AppUserViewSet, basename='appuser')
+router.register(r'vehicle-types', VehicleTypeViewSet, basename='vehicletype')
+router.register(r'brands', BrandViewSet, basename='brand')
+router.register(r'fuel-types', FuelTypeViewSet, basename='fueltype')
+router.register(r'colors', ColorViewSet, basename='color')
+router.register(r'transmissions', TransmissionViewSet, basename='transmission')
+router.register(r'car-models', CarModelViewSet, basename='carmodel')
+router.register(r'cars', CarViewSet, basename='car')
+router.register(r'reservations', ReservationViewSet, basename='reservation')
 
 
 urlpatterns = [
