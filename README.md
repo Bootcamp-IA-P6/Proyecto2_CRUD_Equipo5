@@ -16,7 +16,9 @@ A comprehensive car rental management system built with **Django REST Framework*
 - [Testing](#-testing)
 - [Business Logic](#-business-logic)
 - [Database Diagram (ERD)](#-database-diagram-erd)
+- [Project Retrospective](#-project-retrospective)
 - [Contributors](#-contributors)
+
 
 ---
 
@@ -357,9 +359,20 @@ This project was developed as part of an educational program. Special thanks to:
 
 ---
 
-## 📄 License
+## 📘 Project Retrospective
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project includes a detailed Project Retrospective Document, which summarizes the overall development process — covering achievements, challenges, lessons learned, and personal insights from each team member.
+
+It provides a transparent view of the project’s evolution, focusing on:
+
+- Key successes and obstacles faced during development
+
+- Lessons learned from sprint‑based collaboration
+
+- Improvement areas and reflections from individual contributors
+
+For an in‑depth overview, please visit the full retrospective document:
+👉 **renting/docs/PROJECT_RETROSPECTIVE.md**
 
 ---
 
