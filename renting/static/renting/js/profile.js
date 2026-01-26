@@ -1,7 +1,7 @@
 // renting/static/renting/js/profile.js
 
 /**
- * 전용 로컬 알림 함수
+ * Local alert function for profile-specific notifications
  */
 function showLocalAlert(containerId, message, type = 'danger') {
     const container = document.getElementById(containerId);
@@ -14,7 +14,7 @@ function showLocalAlert(containerId, message, type = 'danger') {
         </div>
     `;
     
-    // 성공 메시지일 경우 3초 뒤 자동 삭제
+    // Auto-dismiss success messages after 3 seconds
     if (type === 'success') {
         setTimeout(() => {
             container.innerHTML = '';
@@ -22,14 +22,16 @@ function showLocalAlert(containerId, message, type = 'danger') {
     }
 }
 
-
+/**
+ * Toggle profile form between view and edit modes
+ */
 function toggleEditMode(enable) {
     const inputs = document.querySelectorAll('#profile-form input:not([type="password"])');
     const actions = document.getElementById('edit-actions');
     const editBtn = document.getElementById('edit-mode-btn');
 
     inputs.forEach(input => {
-        // 이메일은 변경 불가능하게 두는 것이 일반적이지만, 백엔드 허용 시 가능
+        // Email typically read-only, but backend allows changes
         if (input.id !== 'prof-email') input.disabled = !enable;
     });
 
@@ -39,10 +41,13 @@ function toggleEditMode(enable) {
     } else {
         actions.classList.add('d-none');
         editBtn.classList.remove('d-none');
-        loadProfileData(); // 원래 데이터로 복구
+        loadProfileData(); // Restore original data
     }
 }
 
+/**
+ * Load current user profile data from API
+ */
 async function loadProfileData() {
     const res = await fetchWithAuth('/api/profile/me/');
     if (res && res.ok) {
@@ -55,11 +60,13 @@ async function loadProfileData() {
     }
 }
 
-// 프로필 수정 (PATCH)
+/**
+ * Handle profile update form submission (PATCH request)
+ */
 document.getElementById('profile-form').onsubmit = async (e) => {
     e.preventDefault();
     const msgContainer = 'profile-msg-container';
-    document.getElementById(msgContainer).innerHTML = ''; // 이전 메시지 청소
+    document.getElementById(msgContainer).innerHTML = ''; // Clear previous messages
 
     const currentPass = document.getElementById('prof-current-pass').value;
     if (!currentPass) {
@@ -87,12 +94,14 @@ document.getElementById('profile-form').onsubmit = async (e) => {
         updateSidebar(); 
     } else {
         const err = await Auth.parseError(res);
-        // 서버에서 온 에러 메시지 표시
+        // Display server error messages
         showLocalAlert(msgContainer, err.error || "Update failed. Check your password.");
     }
 };
 
-// 비밀번호 변경
+/**
+ * Handle password change form submission
+ */
 document.getElementById('change-pass-form').onsubmit = async (e) => {
     e.preventDefault();
     const msgContainer = 'password-msg-container';
@@ -114,12 +123,13 @@ document.getElementById('change-pass-form').onsubmit = async (e) => {
 
     if (res && res.ok) {
         showLocalAlert(msgContainer, "Password changed successfully! Redirecting to login...", "success");
-        // 2초 뒤 로그아웃 처리
+        // Logout after 2 seconds
         setTimeout(logout, 2000);
     } else {
         const err = await Auth.parseError(res);
-        showLocalAlert(msgContainer, err.error || "Failed to change password. check your current password.");
+        showLocalAlert(msgContainer, err.error || "Failed to change password. Check your current password.");
     }
 };
 
+// Load profile data on page load
 document.addEventListener('DOMContentLoaded', loadProfileData);

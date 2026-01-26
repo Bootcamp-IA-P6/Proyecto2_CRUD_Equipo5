@@ -1,16 +1,22 @@
 // renting/static/renting/js/reservation_create.js
 
+/**
+ * Clear all reservation form errors and global alerts
+ */
 function clearReservationErrors() {
-    // 1. 개별 필드 에러 지우기
+    // 1. Clear individual field errors
     const form = document.getElementById('res-create-form');
     if (form) {
         form.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
-    }    
-    // 2. 전역 알림 영역 지우기 (base.html의 컨테이너 접근)
+    }     
+    // 2. Clear global alert container (from base.html)
     const container = document.getElementById('global-alert-container');
     if (container) container.innerHTML = '';
 }
 
+/**
+ * Handle reservation form submission
+ */
 document.getElementById('res-create-form').onsubmit = async (e) => {
     e.preventDefault();
     clearReservationErrors();
@@ -26,7 +32,7 @@ document.getElementById('res-create-form').onsubmit = async (e) => {
         end_date: endField.value
     };
 
-    // UI 상태: 로딩 중
+    // Set UI loading state
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
 
@@ -47,8 +53,8 @@ document.getElementById('res-create-form').onsubmit = async (e) => {
         } else {
             const errors = await Auth.parseError(response);
             const globalMsg = errors.detail || 
-                            (errors.non_field_errors ? errors.non_field_errors[0] : null) ||
-                            (errors.__all__ ? errors.__all__[0] : null);
+                    (errors.non_field_errors ? errors.non_field_errors[0] : null) ||
+                    (errors.__all__ ? errors.__all__[0] : null);
 
             if (globalMsg) showGlobalAlert(globalMsg);
 
@@ -62,22 +68,22 @@ document.getElementById('res-create-form').onsubmit = async (e) => {
         console.error("Reservation Error:", error);
         showGlobalAlert("Failed to connect to the server.");
     } finally {
-        // [FIX] 버튼 상태 복구
+        // Always restore button state
         submitBtn.disabled = false;
         submitBtn.textContent = 'Reserve Now';
     }
 };
 
 /**
- * 초기화: 차량 목록 로드 및 날짜 제한 설정
+ * Initialize reservation page: load cars and set date restrictions
  */
 async function initReservationPage() {
-    // 1. 날짜 제한 (오늘 이전 선택 불가)
+    // 1. Set date restrictions (no past dates)
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('start_date').setAttribute('min', today);
     document.getElementById('end_date').setAttribute('min', today);
 
-    // 2. 차량 목록 로드
+    // 2. Load available cars list
     const carRes = await fetchWithAuth('/api/cars/');
     if (carRes && carRes.ok) {
         const data = await carRes.json();
@@ -88,16 +94,17 @@ async function initReservationPage() {
             `<option value="${c.id}">${c.car_model_name} (${c.license_plate})</option>`
         ).join('');
 
-        // ⚠️ [CORE LOGIC] URL 파라미터 확인 및 자동 선택
+        // CORE LOGIC: Check URL params and auto-select car
         const urlParams = new URLSearchParams(window.location.search);
         const preSelectedCarId = urlParams.get('car');
         
         if (preSelectedCarId) {
             select.value = preSelectedCarId;
-            // 시각적 피드백: 테두리 강조
+            // Visual feedback: highlight border
             select.classList.add('border-primary', 'bg-light');
         }
     }
 }
 
+// Initialize page on DOM load
 document.addEventListener('DOMContentLoaded', initReservationPage);
