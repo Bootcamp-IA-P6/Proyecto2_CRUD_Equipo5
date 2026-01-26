@@ -27,6 +27,7 @@ urlpatterns = [
     path('users/', views.user_list, name='user_list'),
     path('cars/', views.car_list, name='car_list'),
     path('cars/<int:id>/', views.car_detail, name='car_detail'),
+    path('profile/', views.profile_view, name='profile_view'),
     path('reservations/', views.reservation_list, name='reservation_list'),
     path('reservations/create/', views.reservation_create, name='reservation_create'),
     

@@ -1,49 +1,71 @@
 {% extends 'renting/base.html' %}
+{% load static %}
+
 {% block content %}
-<div class="card shadow-sm p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Reservations</h2>
-        <a href="{% url 'reservation_create' %}" class="btn btn-primary btn-sm">Create Reservation</a>
+<div class="py-4">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h6 class="text-accent fw-bold text-uppercase small mb-1" style="color: var(--accent-color);">Manage Bookings</h6>
+            <h2 class="fw-extrabold text-primary" style="color: var(--primary-color); font-weight: 800;">My Reservations</h2>
+        </div>
+        <a href="/reservations/create/" class="btn btn-accent px-4 py-2 shadow-sm">
+            <i class="bi bi-plus-lg"></i> New Booking
+        </a>
     </div>
-    <table class="table table-striped">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th><th>User</th><th>Car (Model)</th><th>Start</th><th>End</th><th>Price</th>
-            </tr>
-        </thead>
-        <tbody id="res-list-body">
-            <!-- JS가 채워넣을 자리 -->
-        </tbody>
-    </table>
+
+    <!-- ⚠️ 고정 탭 메뉴 (Midnight & Amber) -->
+    <div class="res-tabs-container d-flex gap-2">
+        <button class="res-tab-btn active" id="tab-upcoming" onclick="switchTab('upcoming', this)">Upcoming</button>
+        <button class="res-tab-btn" id="tab-past" onclick="switchTab('past', this)">Past History</button>
+    </div>
+
+    <!-- ⚠️ 데이터가 들어올 컨테이너 -->
+    <div id="my-res-container">
+        <!-- JS fills this with res-cards -->
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    </div>
 </div>
 
-<script>
-    async function loadReservations() {
-        const response = await fetchWithAuth('/api/reservations/'); // URL 경로 확인 필요
-        if (!response) return;
+<!-- ⚠️ 예약 상세 정보 드로어 (Offcanvas) -->
+<div class="offcanvas offcanvas-end border-0 shadow" tabindex="-1" id="resDetailDrawer" style="width: 400px; border-radius: 20px 0 0 20px;">
+    <div class="offcanvas-header border-bottom py-4 px-4">
+        <h5 class="offcanvas-title fw-bold text-primary" style="color: var(--primary-color);">Booking Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <div id="drawer-content">
+            <!-- JS가 채워넣을 자리 -->
+            <div class="text-center p-5"><div class="spinner-border text-primary"></div></div>
+        </div>
+    </div>
+</div>
 
-        const data = await response.json();
-        console.log(data);
-        const items = Array.isArray(data) ? data : (data.results || []);
-        
-        const tbody = document.getElementById('res-list-body');
-        if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No reservations found.</td></tr>';
-            return;
-        } else {
-            tbody.innerHTML = items.map(r => `
-                <tr>
-                    <td>${r.id}</td>
-                    <td>${r.user_name}</td>
-                    <td>${r.car_license} (${r.model_name})</td>
-                    <td>${r.start_date}</td>
-                    <td>${r.end_date}</td>
-                    <td class="text-primary fw-bold">${r.total_price} €</td>
-                </tr>
-            `).join('');
-        }
-    }
+<!-- Cancel Modal (Refined) -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 pt-4 px-4">
+                <h5 class="fw-bold text-primary">Cancel Reservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="modal-error-msg" class="alert alert-danger d-none mb-3"></div>
+                <p class="text-muted">To confirm cancellation, please enter your password. This action is irreversible.</p>
+                <div class="form-floating mb-3">
+                    <input type="password" id="delete-confirm-pass" class="form-control" placeholder="Password">
+                    <label>Password</label>
+                </div>
+                <div class="d-grid gap-2">
+                    <button id="final-delete-btn" class="btn btn-danger py-3 fw-bold" style="border-radius: 12px;">Confirm Cancellation</button>
+                    <button class="btn btn-link text-muted" data-bs-dismiss="modal">Keep my booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    document.addEventListener('DOMContentLoaded', loadReservations);
-</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'renting/js/reservations_history.js' %}"></script>
 {% endblock %}
