@@ -373,5 +373,3 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Project Status**: ✅ Active Development  
 **Last Updated**: January 2026
-
-For questions or issues, please open an issue on GitHub.
