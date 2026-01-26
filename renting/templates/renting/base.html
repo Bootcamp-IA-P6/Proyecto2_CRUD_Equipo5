@@ -10,24 +10,25 @@
     <link rel="stylesheet" href="{% static 'renting/css/style.css' %}">
 </head>
 <body>
-    <!-- Top Nav -->
+    <!-- Top Navigation Bar -->
     <nav class="top-navbar d-flex justify-content-between">
-        <!-- 텍스트 RENTAL.SYS 대신 로고 이미지 적용 -->
+        <!-- Logo (replaces RENTAL.SYS text) -->
         <a href="/" class="brand-logo">
             <img src="{% static 'renting/images/logo_movivento.png' %}" alt="Movivento Logo">
         </a>
         
-        <!-- 우측 토글 버튼 -->
+        <!-- Right Toggle Button -->
         <button class="nav-toggle-btn" onclick="toggleSidebar()">☰</button>
     </nav>
 
-    <!-- Main Content Area -->
+    <!-- Main Content Wrapper -->
     <div class="main-wrapper">
+        <!-- Global Alert Container -->
         <div id="global-alert-container" class="container mt-3"></div>
         {% block content %}{% endblock %}
     </div>
 
-    <!-- ⚠️ Slim & Professional Footer -->
+    <!-- Slim & Professional Footer -->
     <footer class="site-footer">
         <div class="container-fluid px-5 d-flex justify-content-between align-items-center">
             <div>
@@ -39,13 +40,14 @@
         </div>
     </footer>
 
-    <!-- Sidebar 부분 수정 -->
+    <!-- Right Sidebar (Authentication-dependent content) -->
     <aside class="right-sidebar" id="main-sidebar">
         <div id="sidebar-auth-content">
-            <!-- JS가 <ul> 리스트를 채웁니다 -->
+            <!-- JS populates navigation menu -->
         </div>
     </aside>
 
+    <!-- Core JavaScript Files -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'renting/js/auth.js' %}"></script>
     <script src="{% static 'renting/js/layout.js' %}"></script>

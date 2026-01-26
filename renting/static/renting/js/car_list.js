@@ -1,5 +1,8 @@
 // renting/static/renting/js/car_list.js
 
+/**
+ * Load cars list from API and populate table
+ */
 async function loadCars() {
     const response = await fetchWithAuth('/api/cars/'); 
     if (!response) return;
@@ -7,6 +10,7 @@ async function loadCars() {
     const data = await response.json();
     const items = Array.isArray(data) ? data : (data.results || []);
 
+    // Debug: Log first car data structure
     console.log("First Car Data Object:", items[0]); 
     
     const tbody = document.getElementById('car-list-body');
@@ -17,7 +21,7 @@ async function loadCars() {
     }
 
     tbody.innerHTML = items.map(c => {
-        // Use the API image or the static placeholder
+        // Use API image or static placeholder fallback
         const imageUrl = c.car_model_image || '/static/renting/images/cars/car_basic.jpg';
         
         return `
@@ -37,5 +41,5 @@ async function loadCars() {
     }).join('');
 }
 
-// Initialize when the DOM is ready
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', loadCars);

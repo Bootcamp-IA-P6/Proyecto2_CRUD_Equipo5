@@ -6,19 +6,19 @@ let isLoading = false;
 function getFilterParams() {
     const params = new URLSearchParams();
     
-    // 기본 검색 및 정렬
+    // Basic search and sorting
     const search = document.getElementById('search-input').value;
     const sort = document.getElementById('sort-order').value;
     if (search) params.append('search', search);
     if (sort) params.append('ordering', sort);
 
-    // 날짜 가용성
+    // Date availability filters
     const from = document.getElementById('available-from').value;
     const to = document.getElementById('available-to').value;
     if (from) params.append('available_from', from);
     if (to) params.append('available_to', to);
 
-    // 상세 스펙
+    // Detailed spec filters
     const type = document.getElementById('filter-type').value;
     const trans = document.getElementById('filter-trans').value;
     const seats = document.getElementById('filter-seats').value;
@@ -31,7 +31,7 @@ function getFilterParams() {
 }
 
 /**
- * 필터 초기화
+ * Reset all filters
  */
 function clearAllFilters() {
     document.querySelectorAll('.form-control, .form-select').forEach(el => el.value = '');
@@ -44,7 +44,7 @@ async function loadVehicleTypes() {
         const data = await res.json();
         const types = data.results || data;
         const select = document.getElementById('filter-type');
-        // 기존 옵션 유지하고 추가
+        // Preserve existing options and append new ones
         let options = '<option value="">All Types</option>';
         types.forEach(t => {
             options += `<option value="${t.id}">${t.name}</option>`;
@@ -78,19 +78,19 @@ async function loadVehicles(reset = false) {
         console.error("Load failed:", e);
     } finally {
         isLoading = false;
-        toggleUIState(false); // 로딩 UI 끄기
+        toggleUIState(false); // Hide loading UI
     }
 }
 
 /**
- * 카드 렌더링
+ * Render vehicle cards
  */
 function renderCards(items) {
     const grid = document.getElementById('vehicle-list');
     items.forEach(c => {
         const card = document.createElement('div');
         card.className = 'vehicle-card';
-        // 카드 전체 혹은 이미지 클릭 시 상세페이지로 이동하도록 <a> 태그 감싸기
+        // Wrap card/image in <a> tag for detail page navigation
         card.innerHTML = `
             <a href="/cars/${c.id}/" class="text-decoration-none">
                 <div class="card-img-wrapper">
@@ -107,7 +107,7 @@ function renderCards(items) {
                 <hr>
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="price-tag">${c.daily_price || '0'}€ <small class="text-muted fw-normal" style="font-size: 0.7rem;">/day</small></span>
-                    <!-- ⚠️ 딥링크: 예약 생성 시 car ID 전달 -->
+                    <!-- Deep link: pass car ID to reservation creation -->
                     <a href="/reservations/create/?car=${c.id}" class="btn btn-accent btn-sm px-3">Book Now</a>
                 </div>
             </div>
@@ -116,9 +116,8 @@ function renderCards(items) {
     });
 }
 
-
 /**
- * 상태에 따른 버튼/스피너 제어
+ * Control buttons/spinner state based on loading status
  */
 function toggleUIState(loading) {
     const btn = document.getElementById('load-more-btn');
@@ -131,22 +130,21 @@ function toggleUIState(loading) {
     } else {
         spinner.classList.add('d-none');
         if (nextPageUrl) {
-            btn.classList.remove('d-none'); // 다음 데이터가 있으면 버튼 노출
+            btn.classList.remove('d-none'); // Show button if more data available
         } else {
             btn.classList.add('d-none');
             if (document.getElementById('vehicle-list').children.length > 0) {
-                msg.classList.remove('d-none'); // 진짜 끝이면 메시지 노출
+                msg.classList.remove('d-none'); // Show end message
             }
         }
     }
 }
 
-
 /**
- * ⚠️ 무한 스크롤 옵저버 (Intersection Observer)
+ * Infinite scroll observer (Intersection Observer)
  */
 const observer = new IntersectionObserver((entries) => {
-    // 센서가 화면에 보이고, 현재 로딩 중이 아니며, 다음 페이지가 있을 때만 실행
+    // Execute only when sentinel visible, not loading, and next page exists
     if (entries[0].isIntersecting && !isLoading && nextPageUrl) {
         console.log("Automatic load triggered by scroll...");
         loadVehicles();
@@ -157,11 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadVehicleTypes();
     loadVehicles();
     
-    // 바닥 감지 시작
+    // Start bottom detection
     const sentinel = document.getElementById('scroll-sentinel');
     if (sentinel) observer.observe(sentinel);
 });
-
 
 document.addEventListener('DOMContentLoaded', () => {
     loadVehicleTypes();

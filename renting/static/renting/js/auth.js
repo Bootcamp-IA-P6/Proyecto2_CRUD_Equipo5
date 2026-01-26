@@ -1,13 +1,13 @@
 // renting/static/renting/js/auth.js
 
 /**
- * [FIX] 전역 알림 함수 정의 (ReferenceError 방지)
+ * Global alert function definition (prevents ReferenceError)
  */
 window.showGlobalAlert = function(message, type = 'danger') {
     const container = document.getElementById('global-alert-container');
     if (!container) {
         console.error("Alert container not found!");
-        alert(message); // 컨테이너가 없으면 차선책으로 기본 alert 사용
+        alert(message); // Fallback to native alert if container missing
         return;
     }
     container.innerHTML = `
@@ -16,7 +16,7 @@ window.showGlobalAlert = function(message, type = 'danger') {
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     `;
-    // 5초 뒤 자동 삭제
+    // Auto-dismiss after 5 seconds
     setTimeout(() => {
         const alert = container.querySelector('.alert');
         if (alert) {
@@ -39,12 +39,12 @@ const Auth = {
     isLoggedIn: () => !!localStorage.getItem('tokens'),
 
     /**
-     * 중앙 집중식 에러 파서: 서버 응답에서 에러 메시지를 추출합니다.
+     * Centralized error parser: extracts error messages from server responses
      */
     parseError: async (response) => {
         try {
             const data = await response.json();
-            // 커스텀 예외 핸들러의 'details' 키 또는 기본 'detail' 키 확인
+            // Check custom handler 'details' key or default 'detail' key
             return data.details || data;
         } catch (e) {
             return { detail: "A server error occurred. Please try again later." };
@@ -52,7 +52,7 @@ const Auth = {
     },
 
     /**
-     * Access 토큰 만료 시 Refresh 토큰으로 갱신 요청
+     * Refresh access token using refresh token when expired
      */
     refreshAccessToken: async () => {
         const tokens = Auth.getTokens();
@@ -78,7 +78,7 @@ const Auth = {
 };
 
 /**
- * [UPGRADED] Guest-aware fetch wrapper
+ * Guest-aware fetch wrapper with automatic token refresh
  */
 async function fetchWithAuth(url, options = {}) {
     const tokens = Auth.getTokens();
@@ -86,14 +86,14 @@ async function fetchWithAuth(url, options = {}) {
     if (!options.headers) options.headers = {};
     options.headers['Content-Type'] = 'application/json';
 
-    // ⚠️ 수정: 토큰이 있을 때만 헤더에 추가 (없어도 리다이렉트 안 함)
+    // Add token header only if tokens exist (no redirect for guests)
     if (tokens && tokens.access) {
         options.headers['Authorization'] = `Bearer ${tokens.access}`;
     }
 
     let response = await fetch(url, options);
 
-    // 401(만료) 발생 시에만 리프레시 시도
+    // Try refresh only on 401 (expired token)
     if (response.status === 401 && tokens && tokens.refresh) {
         const refreshed = await Auth.refreshAccessToken();
         if (refreshed) {
@@ -101,7 +101,7 @@ async function fetchWithAuth(url, options = {}) {
             options.headers['Authorization'] = `Bearer ${newTokens.access}`;
             response = await fetch(url, options);
         } else {
-            // 진짜 만료된 경우만 로그인으로
+            // Real expiration - clear tokens and redirect
             Auth.clear();
             if (window.location.pathname !== '/') {
                 window.location.href = "/login/?reason=expired";

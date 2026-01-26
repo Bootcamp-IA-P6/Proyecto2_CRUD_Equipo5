@@ -1,5 +1,8 @@
 // renting/static/renting/js/register.js
 
+/**
+ * Clear all form errors and status messages
+ */
 function clearErrors() {
     const form = document.getElementById('res-create-form');
     if (form) {
@@ -9,12 +12,12 @@ function clearErrors() {
 }
 
 /**
- * Client-side validation matching SignupSerializer rules
+ * Client-side validation matching SignupSerializer backend rules
  */
 function validateFrontend(data, passConfirm) {
     let isValid = true;
 
-    // Names: letters only
+    // Names: letters only (matches backend regex)
     const nameRegex = /^[a-zA-Z\sáéíóúñÁÉÍÓÚÑ]+$/;
     if (!nameRegex.test(data.first_name)) {
         document.getElementById('error-first_name').innerText = "Names can only contain letters.";
@@ -25,27 +28,27 @@ function validateFrontend(data, passConfirm) {
         isValid = false;
     }
 
-    // Email format
+    // Email format validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(data.email)) {
         document.getElementById('error-email').innerText = "Please enter a valid email.";
         isValid = false;
     }
 
-    // Password strength
+    // Password strength (8+ chars, upper, lower, number, special)
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
     if (!passwordRegex.test(data.password)) {
         document.getElementById('error-password').innerText = "Must be 8+ chars, with upper, lower, number, and special char.";
         isValid = false;
     }
 
-    // Password confirm
+    // Password confirmation match
     if (data.password !== passConfirm) {
         document.getElementById('error-password_confirm').innerText = "Passwords do not match.";
         isValid = false;
     }
 
-    // Age (18+)
+    // Age validation (18+ years)
     if (data.birth_date) {
         const birth = new Date(data.birth_date);
         const today = new Date();
@@ -60,10 +63,14 @@ function validateFrontend(data, passConfirm) {
     return isValid;
 }
 
+/**
+ * Handle registration form submission
+ */
 document.getElementById('register-form').onsubmit = async (e) => {
     e.preventDefault();
     clearErrors();
 
+    // Collect form data
     const payload = {
         first_name: document.getElementById('reg-fname').value,
         last_name: document.getElementById('reg-lname').value,
@@ -74,12 +81,14 @@ document.getElementById('register-form').onsubmit = async (e) => {
     };
     const passConfirm = document.getElementById('reg-pass-confirm').value;
 
+    // Frontend validation before API call
     if (!validateFrontend(payload, passConfirm)) return;
 
     const btn = document.getElementById('submit-btn');
     btn.disabled = true;
 
     try {
+        // Submit to user creation API endpoint
         const response = await fetch('/api/users/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -93,6 +102,7 @@ document.getElementById('register-form').onsubmit = async (e) => {
             // Redirect to login page
             window.location.href = "/login/"; 
         } else {
+            // Display backend validation errors
             const errors = result.details || result;
             for (const field in errors) {
                 const errorDiv = document.getElementById(`error-${field}`);

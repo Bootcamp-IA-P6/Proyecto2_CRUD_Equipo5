@@ -8,6 +8,8 @@ from .views import (
 )
 from .profile_views import ProfileView, ChangePasswordView
 
+
+# API Router for ViewSets
 # Router con basenames explícitos
 router = DefaultRouter()
 router.register(r'users', AppUserViewSet, basename='appuser')
@@ -20,9 +22,10 @@ router.register(r'car-models', CarModelViewSet, basename='carmodel')
 router.register(r'cars', CarViewSet, basename='car')
 router.register(r'reservations', ReservationViewSet, basename='reservation')
 
+
 urlpatterns = [
     # ==========================================
-    # HTML Views (templates)
+    # HTML Template Views
     # ==========================================
     path('', views.home, name='home'),
     path('users/', views.user_list, name='user_list'),
@@ -33,7 +36,7 @@ urlpatterns = [
     path('reservations/create/', views.reservation_create, name='reservation_create'),
     
     # ==========================================
-    # Auth HTML Views
+    # Authentication HTML Views
     # ==========================================
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
@@ -42,10 +45,9 @@ urlpatterns = [
     # ==========================================
     # API Endpoints
     # ==========================================
-    # Profile management (usuario actual)
+    path('api/', include(router.urls)),  # REST API ViewSets
+    
+    # Profile management endpoints (current user)
     path('api/profile/me/', ProfileView.as_view(), name='profile-me'),
     path('api/profile/me/change-password/', ChangePasswordView.as_view(), name='profile-change-password'),
-    
-    # REST API (ViewSets) - SOLO UNA VEZ
-    path('api/', include(router.urls)),
 ]

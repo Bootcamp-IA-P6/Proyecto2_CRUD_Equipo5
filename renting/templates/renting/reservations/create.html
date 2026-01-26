@@ -3,11 +3,15 @@
 
 {% block content %}
 <div class="card shadow p-4 mx-auto" style="max-width: 600px; margin-top: 30px;">
+    <!-- Page Title -->
     <h3 class="mb-4 text-center">New Reservation</h3>
 
+    <!-- Global Error Alert Container -->
     <div id="global-error" class="alert alert-danger d-none mb-3"></div>
 
+    <!-- Reservation Form -->
     <form id="res-create-form" novalidate>
+        <!-- Vehicle Selection -->
         <div class="mb-3">
             <label class="form-label">Select Vehicle</label>
             <select id="car-select" class="form-select" required>
@@ -16,6 +20,7 @@
             <div id="error-car" class="text-danger small mt-1"></div>
         </div>
 
+        <!-- Date Selection Row -->
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label class="form-label">Pick-up Date</label>
@@ -29,6 +34,7 @@
             </div>
         </div>
 
+        <!-- Form Actions -->
         <div class="mt-4">
             <button type="submit" class="btn btn-primary w-100 py-2">Confirm Reservation</button>
             <a href="{% url 'reservation_list' %}" class="btn btn-link w-100 mt-2 text-decoration-none text-muted">Cancel</a>
@@ -36,5 +42,6 @@
     </form>
 </div>
 
+<!-- Reservation Form JavaScript -->
 <script src="{% static 'renting/js/reservation_create.js' %}"></script>
 {% endblock %}
