@@ -31,6 +31,9 @@ def reservation_list(request):
 def car_detail(request, id):
     return render(request, 'renting/cars/detail.html', {'car_id': id})
 
+def profile_view(request):
+    return render(request, 'renting/users/profile.html')
+
 
 # API Views con JWT
 from rest_framework import viewsets
