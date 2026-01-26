@@ -28,6 +28,9 @@ def car_list(request):
 def reservation_list(request):
     return render(request, 'renting/reservations/list.html')
 
+def car_detail(request, id):
+    return render(request, 'renting/cars/detail.html', {'car_id': id})
+
 
 # API Views con JWT
 from rest_framework import viewsets
@@ -227,34 +230,34 @@ class AppUserViewSet(viewsets.ModelViewSet):
 class VehicleTypeViewSet(viewsets.ModelViewSet):
     queryset = VehicleType.objects.all()
     serializer_class = VehicleTypeSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffOrReadOnlyPermission]
 
 class BrandViewSet(viewsets.ModelViewSet):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffOrReadOnlyPermission]
 
 class FuelTypeViewSet(viewsets.ModelViewSet):
     queryset = FuelType.objects.all()
     serializer_class = FuelTypeSerializer
-    permission_classes = [IsAuthenticated] 
+    permission_classes = [IsStaffOrReadOnlyPermission] 
 
 class ColorViewSet(viewsets.ModelViewSet):
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffOrReadOnlyPermission]
 
 class TransmissionViewSet(viewsets.ModelViewSet):
     queryset = Transmission.objects.all()
     serializer_class = TransmissionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffOrReadOnlyPermission]
 
 class CarModelViewSet(viewsets.ModelViewSet):
     queryset = CarModel.objects.select_related(
         'brand', 'vehicle_type', 'fuel_type', 'transmission'
     ).all()
     serializer_class = CarModelSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsStaffOrReadOnlyPermission]
 
 class CarViewSet(viewsets.ModelViewSet):
     queryset = Car.objects.select_related('car_model', 'car_model__brand', 'color').all()
@@ -264,7 +267,7 @@ class CarViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = CarFilter
     search_fields = ['license_plate', 'car_model__model_name']
-    ordering_fields = ['license_plate']
+    ordering_fields = ['license_plate', 'car_model__daily_price', 'mileage']
 
     def perform_create(self, serializer):
         car = serializer.save()
