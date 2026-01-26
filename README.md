@@ -373,8 +373,7 @@ It provides a transparent view of the project’s evolution, focusing on:
 
 For an in‑depth overview, please visit the full retrospective document:
 
-👉 **renting/docs/PROJECT_RETROSPECTIVE.md**
-
+👉 **[PROJECT_RETROSPECTIVE.md](docs/PROJECT_RETROSPECTIVE.md)**
 ---
 
 ## 🙏 Acknowledgments
