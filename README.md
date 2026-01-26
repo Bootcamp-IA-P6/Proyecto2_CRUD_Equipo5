@@ -372,6 +372,7 @@ It provides a transparent view of the project’s evolution, focusing on:
 - Improvement areas and reflections from individual contributors
 
 For an in‑depth overview, please visit the full retrospective document:
+
 👉 **renting/docs/PROJECT_RETROSPECTIVE.md**
 
 ---
