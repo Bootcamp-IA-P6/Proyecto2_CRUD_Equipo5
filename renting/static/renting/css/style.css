@@ -9,13 +9,6 @@
     --sidebar-width: 280px;
 }
 
-body {
-    background-color: var(--bg-color);
-    color: var(--text-main);
-    font-family: 'Inter', -apple-system, sans-serif;
-    margin: 0;
-}
-
 /* 1. Top Navigation */
 .top-navbar {
     height: 60px;
@@ -28,37 +21,34 @@ body {
     width: 100%;
     z-index: 1000;
 }
+
+/* Logo styling */
 .brand-logo {
-    /* color: white;
-    font-weight: 800;
-    font-size: 1.5rem;
-    text-decoration: none;
-    letter-spacing: -1px; */
     /* logo image */
     display: flex;
     align-items: center;
     text-decoration: none;
 }
 .brand-logo img {
-    height: 40px;      /* 상단바 높이에 맞게 조절 (기존 nav 높이 60px) */
-    width: auto;       /* 가로세로 비율 유지 */
+    height: 40px;      /* Adjust to match topbar height (nav 60px) */
+    width: auto;       /* Maintain aspect ratio */
     object-fit: contain;
     transition: transform 0.2s ease;
 }
 .brand-logo img:hover {
-    transform: scale(1.05); /* 로고에 마우스를 올리면 살짝 커지는 효과 */
+    transform: scale(1.05); /* Slight scale effect on hover */
 }
 
 /* 2. Sidebar (Right) */
 .right-sidebar {
     position: fixed;
-    right: -300px; /* 초기 위치: 화면 밖 */
+    right: -300px; /* Initial position: off-screen */
     top: 60px;
     width: 300px;
     height: calc(100vh - 60px);
     background: white;
     box-shadow: -5px 0 15px rgba(0,0,0,0.05);
-    transition: right 0.3s ease; /* 애니메이션 효과 */
+    transition: right 0.3s ease; /* Slide animation */
     z-index: 1050;
     padding: 2rem 1.5rem;
 }
@@ -67,24 +57,24 @@ body {
     right: 0;
 }
 
-/* 사이드바 메뉴 리스트 스타일 (버전업!) */
+/* Enhanced sidebar menu styling */
 .sidebar-menu {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 .sidebar-menu li {
-    margin-bottom: 10px; /* 아이템 간격 */
+    margin-bottom: 10px; /* Item spacing */
 }
-/* <a>와 <button>을 동일한 디자인으로 통일 */
+/* Unified styling for links and buttons */
 .sidebar-menu a, 
 .sidebar-menu button {
     display: flex;
     align-items: center;
     padding: 12px 16px;
-    background-color: #f8fafc; /* 아주 연한 회색 배경 */
+    background-color: #f8fafc; /* Light gray background */
     color: #1e293b !important;
-    text-decoration: none !important; /* ⚠️ 밑줄 절대 금지 */
+    text-decoration: none !important; /* No underlines */
     border-radius: 10px;
     border: 1px solid #e2e8f0;
     font-size: 0.95rem;
@@ -98,37 +88,36 @@ body {
     background-color: #f1f5f9;
     color: var(--primary-color);
 }
-/* 사이드바 이모지/아이콘 기본화 */
+/* Sidebar emoji/icon normalization */
 .sidebar-menu li span {
-    filter: grayscale(100%); /* 모든 이콘을 흑백으로 */
-    margin-right: 10px;
+    filter: grayscale(100%); /* Grayscale all icons */
 }
 
-/* 강조 컬러 (Amber) 가 들어간 메뉴 */
+/* Accent color menu items (Amber) */
 .menu-accent {
     color: var(--accent-color) !important;
     font-weight: 600;
 }
 
-/* 마우스 올렸을 때 (Hover) */
+/* Hover effects */
 .sidebar-menu a:hover, 
 .sidebar-menu button:hover {
     background-color: #f1f5f9;
     border-color: #cbd5e1;
     color: var(--primary-color) !important;
-    transform: translateX(5px); /* 오른쪽으로 살짝 밀리는 효과 */
+    transform: translateX(5px); /* Slight right shift */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-/* 강조 버튼 (Book Now 등) */
+/* Highlight buttons (Book Now etc.) */
 .sidebar-menu .menu-accent {
-    background-color: #fffbeb; /* 따뜻한 노란빛 */
+    background-color: #fffbeb; /* Warm yellow tint */
     border-color: var(--accent-color);
     color: #b45309 !important;
     font-weight: 700;
 }
 
-/* 로그아웃 버튼 전용 스타일 */
+/* Logout button specific styling */
 .sidebar-menu .text-danger {
     background-color: #fef2f2;
     border-color: #fecaca;
@@ -146,11 +135,11 @@ body {
     margin-right: 0; 
     padding: 2rem;
     transition: margin-right 0.3s ease;
-    min-height: calc(100vh - 110px); /* 뷰포트에서 상단바와 푸터 높이를 뺀 만큼 최소 높이 보장 */
+    min-height: calc(100vh - 110px); /* Ensure minimum height accounting for navbar/footer */
     padding-bottom: 0;
 }
 
-/* 토글 버튼 (햄버거 아이콘) */
+/* Toggle button (hamburger icon) */
 .nav-toggle-btn {
     background: none;
     border: none;
@@ -195,30 +184,29 @@ body {
 .btn-primary:hover { background-color: #1e293b; }
 .btn-accent { background-color: var(--accent-color); border: none; color: white; font-weight: 600; }
 
-
-/* 실제 푸터 스타일 */
+/* Footer styling */
 .site-footer {
-    height: 50px; /* 높이 고정 */
+    height: 50px; /* Fixed height */
     background-color: #ffffff;
     border-top: 1px solid #edf2f7;
     display: flex;
     align-items: center;
-    font-size: 0.8rem; /* 글자 크기 축소 */
-    color: #94a3b8; /* 더 연한 회색 */
+    font-size: 0.8rem; /* Smaller text */
+    color: #94a3b8; /* Light gray */
     transition: margin-right 0.3s ease;
 }
 
-/* 사이드바가 열렸을 때 푸터도 밀어주기 */
+/* Push footer when sidebar is open */
 .right-sidebar.active ~ .site-footer {
     margin-right: 300px;
 }
 
-/* 무한 스크롤 감지용 센티널 (바닥 체크용) */
+/* Infinite scroll sentinel */
 #scroll-sentinel {
     height: 50px;
 }
 
-/* 대시보드 전용 탭 스타일 */
+/* Dashboard tab styling */
 .res-tabs-container {
     border-bottom: 2px solid #e2e8f0;
     margin-bottom: 2rem;
@@ -245,10 +233,10 @@ body {
     left: 0;
     width: 100%;
     height: 3px;
-    background-color: var(--accent-color); /* Amber 포인트 */
+    background-color: var(--accent-color); /* Amber accent */
 }
 
-/* 예약 카드 스타일 (테이블 대체) */
+/* Reservation card styling (table replacement) */
 .res-card {
     background: white;
     border-radius: 16px;
@@ -274,7 +262,7 @@ body {
 .res-info-price { flex: 1; text-align: right; }
 .res-info-action { flex: 1; text-align: right; padding-left: 1.5rem; }
 
-/* 상태 배지 */
+/* Status badges */
 .status-badge {
     padding: 0.4rem 0.8rem;
     border-radius: 100px;
@@ -286,9 +274,9 @@ body {
 .status-upcoming { background: #ecfdf5; color: #059669; }
 .status-past { background: #f1f5f9; color: #64748b; }
 
-/* 예약 상세 드로어 스타일 */
+/* Reservation detail drawer */
 .offcanvas {
-    z-index: 1100 !important; /* 사이드바보다 위에 뜨게 함 */
+    z-index: 1100 !important; /* Above sidebar */
 }
 
 .offcanvas-backdrop {

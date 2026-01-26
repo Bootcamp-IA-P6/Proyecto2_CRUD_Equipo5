@@ -4,7 +4,11 @@ from django.contrib import messages
 from django.utils import timezone
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status
+from rest_framework import filters, status, viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.utils import timezone
+from .filters import CarFilter, ReservationFilter
 from rest_framework_simplejwt.tokens import RefreshToken
 from .filters import CarFilter, ReservationFilter
 from .permissions import IsReservationOwnerOrStaff, IsStaffPermission, IsStaffOrReadOnlyPermission 
@@ -12,35 +16,6 @@ from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
     CarModel, Car, Reservation
 )
-
-logger = logging.getLogger(__name__)
-
-def user_list(request):
-    logger.info("User list page accessed")
-    users = AppUser.objects.all()
-    return render(request, 'renting/users/list.html', {'users': users})
-
-def home(request):
-    return render(request, 'renting/home.html')
-
-def car_list(request):
-    return render(request, 'renting/cars/list.html')
-
-def reservation_list(request):
-    return render(request, 'renting/reservations/list.html')
-
-def car_detail(request, id):
-    return render(request, 'renting/cars/detail.html', {'car_id': id})
-
-def profile_view(request):
-    return render(request, 'renting/users/profile.html')
-
-
-# API Views con JWT
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated, AllowAny, BasePermission
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from .serializers import (
     AppUserSerializer, VehicleTypeSerializer, BrandSerializer,
     FuelTypeSerializer, ColorSerializer, TransmissionSerializer,
@@ -48,29 +23,89 @@ from .serializers import (
 )
 
 
-# Permiso personalizado para el ViewSet de usuarios
-class IsOwnerOrStaffOrCreateOnly(BasePermission):
+logger = logging.getLogger(__name__)
+
+
+# ==========================================
+# HTML Template Views
+# ==========================================
+def user_list(request):
+    """Display list of all users"""
+    logger.info("User list page accessed")
+    users = AppUser.objects.all()
+    return render(request, 'renting/users/list.html', {'users': users})
+
+
+def home(request):
+    """Render home page"""
+    return render(request, 'renting/home.html')
+
+
+def car_list(request):
+    """Render car list page"""
+    return render(request, 'renting/cars/list.html')
+
+
+def reservation_list(request):
+    """Render reservation list page"""
+    return render(request, 'renting/reservations/list.html')
+
+
+def car_detail(request, id):
+    """Render car detail page"""
+    return render(request, 'renting/cars/detail.html', {'car_id': id})
+
+
+def profile_view(request):
+    """Render user profile page"""
+    return render(request, 'renting/users/profile.html')
+
+
+def login_view(request):
+    """Render login page"""
+    return render(request, 'renting/login.html')
+
+
+def logout_view(request):
+    """Redirect to login page"""
+    return redirect('login')
+
+
+def register_view(request):
+    """Render registration page"""
+    return render(request, 'renting/register.html')
+
+
+def reservation_create(request):
+    """Render reservation creation page"""
+    return render(request, 'renting/reservations/create.html')
+
+
+# ==========================================
+# API ViewSets
+# ==========================================
+class IsOwnerOrStaffOrCreateOnly(permissions.BasePermission):
     """
-    - Cualquiera puede registrarse (create)
-    - Usuarios autenticados pueden acceder a /me/
-    - Solo staff puede list/retrieve/update/delete otros usuarios
+    Custom permission for user management:
+    - Anyone can create (register)
+    - Authenticated users can access /me/ endpoints  
+    - Staff only for list/retrieve/update/delete others
     """
     
     def has_permission(self, request, view):
-        # Permitir registro sin autenticación
+        # Allow registration without authentication
         if view.action == 'create':
             return True
         
-        # Todas las acciones personalizadas (me, update_me, etc.) requieren autenticación
+        # Custom actions require authentication
         if view.action in ['me', 'update_me', 'delete_me', 'change_password']:
-            # CRÍTICO: Verificar que el usuario está autenticado Y activo
             return (
                 request.user 
                 and request.user.is_authenticated 
                 and getattr(request.user, 'is_active', True)
             )
         
-        # list, retrieve, update, destroy requieren staff
+        # List/retrieve/update/destroy require staff
         return (
             request.user 
             and request.user.is_authenticated 
@@ -79,11 +114,10 @@ class IsOwnerOrStaffOrCreateOnly(BasePermission):
         )
     
     def has_object_permission(self, request, view, obj):
-        # Staff puede todo
+        # Staff has full access
         if request.user.is_staff:
             return True
-        
-        # Usuarios solo pueden modificar su propia cuenta
+        # Users can only modify their own account
         return obj == request.user
 
 
@@ -98,58 +132,49 @@ class AppUserViewSet(viewsets.ModelViewSet):
         return AppUserSerializer
 
     def perform_create(self, serializer):
+        """Log user creation"""
         user = serializer.save()
         logger.info(f"User created: {user.email}")
 
     def perform_destroy(self, instance):
+        """Log user deletion"""
         logger.info(f"User deleted: {instance.email}")
         instance.delete()
 
     # ==========================================
-    # ENDPOINTS /me/
+    # Current User Endpoints (/me/)
     # ==========================================
     
     @action(detail=False, methods=['get'], url_path='me')
     def me(self, request):
-        """
-        GET /api/users/me/
-        Obtiene información del usuario actual
-        """
+        """GET /api/users/me/ - Get current user profile"""
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
     @action(detail=False, methods=['put', 'patch'], url_path='me')
     def update_me(self, request):
-        """
-        PUT/PATCH /api/users/me/
-        Actualiza información del usuario actual
-        
-        IMPORTANTE: Se requiere current_password para cambios de seguridad
-        """
-        # Validar current_password si está presente
+        """PUT/PATCH /api/users/me/ - Update current user profile"""
         current_password = request.data.get('current_password')
         
-        # Si intenta cambiar email o campos sensibles, requerir contraseña
-        sensitive_fields = {'email', 'password'}
+        # Require password for sensitive fields
+        sensitive_fields = {'email'}
         is_sensitive_update = any(field in request.data for field in sensitive_fields)
         
         if is_sensitive_update and not current_password:
             return Response(
-                {"error": "Se requiere current_password para cambios sensibles"},
+                {"error": "current_password is required for sensitive changes"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        if current_password:
-            if not request.user.check_password(current_password):
-                return Response(
-                    {"error": "Contraseña actual incorrecta"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        if current_password and not request.user.check_password(current_password):
+            return Response(
+                {"error": "Invalid current password"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        # Crear una copia de los datos sin current_password
+        # Remove current_password from data
         data = request.data.copy()
-        if 'current_password' in data:
-            data.pop('current_password')
+        data.pop('current_password', None)
         
         serializer = self.get_serializer(
             request.user, 
@@ -163,23 +188,18 @@ class AppUserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['delete'], url_path='me')
     def delete_me(self, request):
-        """
-        DELETE /api/users/me/
-        Elimina la cuenta del usuario actual
-        
-        Body: { "password": "..." }
-        """
+        """DELETE /api/users/me/ - Delete current user account"""
         password = request.data.get('password')
         
         if not password:
             return Response(
-                {"error": "Se requiere password para eliminar la cuenta"},
+                {"error": "Password is required to delete account"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         if not request.user.check_password(password):
             return Response(
-                {"error": "Contraseña incorrecta"},
+                {"error": "Invalid password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -187,81 +207,83 @@ class AppUserViewSet(viewsets.ModelViewSet):
         logger.info(f"User self-deleted: {user.email}")
         user.delete()
         return Response(
-            {"detail": "Cuenta eliminada exitosamente"}, 
+            {"detail": "Account deleted successfully"}, 
             status=status.HTTP_204_NO_CONTENT
         )
 
     @action(detail=False, methods=['post'], url_path='me/change-password')
     def change_password(self, request):
-        """
-        POST /api/users/me/change-password/
-        Cambia la contraseña del usuario actual
-        
-        Body: {
-            "old_password": "...",
-            "new_password": "..."
-        }
-        """
+        """POST /api/users/me/change-password/ - Change current user password"""
         old_password = request.data.get('old_password')
         new_password = request.data.get('new_password')
         
         if not old_password or not new_password:
             return Response(
-                {"error": "Se requieren old_password y new_password"},
+                {"error": "old_password and new_password are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         if not request.user.check_password(old_password):
             return Response(
-                {"error": "Contraseña actual incorrecta"},
+                {"error": "Invalid current password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validación básica de nueva contraseña
         if len(new_password) < 8:
             return Response(
-                {"error": "La nueva contraseña debe tener al menos 8 caracteres"},
+                {"error": "New password must be at least 8 characters"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         request.user.set_password(new_password)
         request.user.save()
         logger.info(f"Password changed for user: {request.user.email}")
-        
-        return Response({"detail": "Contraseña actualizada exitosamente"})
+        return Response({"detail": "Password updated successfully"})
 
 
 class VehicleTypeViewSet(viewsets.ModelViewSet):
+    """Admin-only CRUD for vehicle types"""
     queryset = VehicleType.objects.all()
     serializer_class = VehicleTypeSerializer
     permission_classes = [IsStaffOrReadOnlyPermission]
 
+
 class BrandViewSet(viewsets.ModelViewSet):
+    """Admin-only CRUD for brands"""
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
     permission_classes = [IsStaffOrReadOnlyPermission]
 
+
 class FuelTypeViewSet(viewsets.ModelViewSet):
+    """Admin-only CRUD for fuel types"""
     queryset = FuelType.objects.all()
     serializer_class = FuelTypeSerializer
     permission_classes = [IsStaffOrReadOnlyPermission] 
 
+
 class ColorViewSet(viewsets.ModelViewSet):
+    """Admin-only CRUD for colors"""
     queryset = Color.objects.all()
     serializer_class = ColorSerializer
     permission_classes = [IsStaffOrReadOnlyPermission]
 
+
 class TransmissionViewSet(viewsets.ModelViewSet):
+    """Admin-only CRUD for transmissions"""
     queryset = Transmission.objects.all()
     serializer_class = TransmissionSerializer
     permission_classes = [IsStaffOrReadOnlyPermission]
 
+
 class CarModelViewSet(viewsets.ModelViewSet):
+    """Admin-only CRUD for car models with optimized queries"""
     queryset = CarModel.objects.select_related(
         'brand', 'vehicle_type', 'fuel_type', 'transmission'
     ).all()
     serializer_class = CarModelSerializer
     permission_classes = [IsStaffOrReadOnlyPermission]
+
 
 class CarViewSet(viewsets.ModelViewSet):
     """
@@ -336,12 +358,14 @@ class CarViewSet(viewsets.ModelViewSet):
         logger.info(f"Car deleted: {instance.license_plate}")
         instance.delete()
 
+
 class ReservationViewSet(viewsets.ModelViewSet):
+    """Authenticated users manage reservations (own only, staff all)"""
     queryset = Reservation.objects.select_related(
         'user', 'car', 'car__car_model', 'car__car_model__brand'
     ).all()
     serializer_class = ReservationSerializer
-    permission_classes = [IsAuthenticated, IsReservationOwnerOrStaff]
+    permission_classes = [permissions.IsAuthenticated, IsReservationOwnerOrStaff]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = ReservationFilter
@@ -349,37 +373,35 @@ class ReservationViewSet(viewsets.ModelViewSet):
     ordering_fields = ['start_date', 'end_date']
 
     def get_queryset(self):
-        """
-        Issue #24: Non-staff solo ve sus reservas
-        """
+        """Non-staff users see only their reservations (Issue #24)"""
         queryset = super().get_queryset()
         if not self.request.user.is_staff:
             return queryset.filter(user=self.request.user)
         return queryset
 
     def perform_create(self, serializer):
+        """Auto-assign current user and log creation"""
         reservation = serializer.save(user=self.request.user)
         logger.info(
             f"Reservation created: user={reservation.user.email}, car={reservation.car.license_plate}"
         )
 
     def perform_destroy(self, instance):
+        """Log reservation deletion"""
         logger.info(
             f"Reservation deleted: id={instance.id}, user={instance.user.email}"
         )
         instance.delete()
 
     def get_permissions(self):
-        """
-        #61 Explicit: OwnerOrStaff para list/retrieve
-        """
+        """Explicit permissions for list/retrieve (Issue #61)"""
         if self.action in ['list', 'retrieve']:
-            return [IsAuthenticated(), IsReservationOwnerOrStaff()]
-        return [IsAuthenticated()]
+            return [permissions.IsAuthenticated(), IsReservationOwnerOrStaff()]
+        return [permissions.IsAuthenticated()]
 
     @action(detail=False, methods=['get'], url_path='my')
     def my_reservations(self, request):
-        """#62 GET /api/reservations/my/?status=upcoming|past"""
+        """GET /api/reservations/my/?status=upcoming|past - Filter user reservations (Issue #62)"""
         queryset = self.filter_queryset(self.get_queryset())
         
         status_param = request.query_params.get('status')
@@ -399,17 +421,17 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['delete'], url_path='delete-with-password')
     def delete_with_password(self, request, pk=None):
-        """#62 DELETE /api/reservations/{id}/delete-with-password/"""
+        """DELETE /api/reservations/{id}/delete-with-password/ - Secure deletion (Issue #62)"""
         reservation = self.get_object()
         
-        # Past reservations read-only
+        # Past reservations are read-only
         if reservation.end_date < timezone.now().date():
             return Response(
                 {"detail": "Past reservations cannot be deleted"}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Password confirmation
+        # Require password confirmation
         password = request.data.get('password')
         if not request.user.check_password(password):
             return Response(
@@ -422,16 +444,3 @@ class ReservationViewSet(viewsets.ModelViewSet):
             {"message": "Reservation deleted successfully"}, 
             status=status.HTTP_204_NO_CONTENT
         )
-
-
-def login_view(request):
-    return render(request, 'renting/login.html')
-
-def logout_view(request):
-    return redirect('login')
-
-def register_view(request):
-    return render(request, 'renting/register.html')
-
-def reservation_create(request):
-    return render(request, 'renting/reservations/create.html')

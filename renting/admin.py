@@ -12,11 +12,12 @@ from .models import (
 # Reusable CSV Export Action
 # ============================================
 
+
 @admin.action(description="Export selected items to CSV")
 def export_as_csv(modeladmin, request, queryset):
     """
-    Generic action to export selected model instances to a UTF-8 encoded CSV file.
-    Includes BOM for Excel compatibility and dynamic headers based on model fields.
+    Generic action to export selected model instances to UTF-8 CSV.
+    Includes BOM for Excel compatibility with dynamic headers.
     """
     meta = modeladmin.model._meta
     field_names = [field.name for field in meta.fields]
@@ -37,12 +38,13 @@ def export_as_csv(modeladmin, request, queryset):
 
 
 # ============================================
-# Issue #86: Lookup Models Admin
+# Lookup Models Admin (Issue #86)
 # ============================================
+
 
 @admin.register(VehicleType)
 class VehicleTypeAdmin(admin.ModelAdmin):
-    """Admin for Vehicle Types (Issue #86)"""
+    """Admin interface for Vehicle Types (Issue #86)"""
     list_display = ['name']
     search_fields = ['name']
     ordering = ['name']
@@ -51,7 +53,7 @@ class VehicleTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    """Admin for Brands (Issue #86)"""
+    """Admin interface for Brands (Issue #86)"""
     list_display = ['name']
     search_fields = ['name']
     ordering = ['name']
@@ -60,7 +62,7 @@ class BrandAdmin(admin.ModelAdmin):
 
 @admin.register(FuelType)
 class FuelTypeAdmin(admin.ModelAdmin):
-    """Admin for Fuel Types (Issue #86)"""
+    """Admin interface for Fuel Types (Issue #86)"""
     list_display = ['name']
     search_fields = ['name']
     ordering = ['name']
@@ -69,7 +71,7 @@ class FuelTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Color)
 class ColorAdmin(admin.ModelAdmin):
-    """Admin for Colors (Issue #86)"""
+    """Admin interface for Colors (Issue #86)"""
     list_display = ['name']
     search_fields = ['name']
     ordering = ['name']
@@ -78,7 +80,7 @@ class ColorAdmin(admin.ModelAdmin):
 
 @admin.register(Transmission)
 class TransmissionAdmin(admin.ModelAdmin):
-    """Admin for Transmissions (Issue #86)"""
+    """Admin interface for Transmissions (Issue #86)"""
     list_display = ['name']
     search_fields = ['name']
     ordering = ['name']
@@ -86,14 +88,15 @@ class TransmissionAdmin(admin.ModelAdmin):
 
 
 # ============================================
-# Issue #86: Main Models Admin with Validation
+# Main Models Admin with Validation (Issue #86)
 # ============================================
+
 
 @admin.register(AppUser)
 class AppUserAdmin(BaseUserAdmin):
     """
-    Admin for Users with enhanced display (Issue #86)
-    Inherits from BaseUserAdmin for proper password handling
+    Custom admin for AppUser with enhanced display (Issue #86).
+    Inherits BaseUserAdmin for proper password handling.
     """
     list_display = ['email', 'first_name', 'last_name', 'is_active', 'is_staff', 'last_login']
     list_filter = ['is_staff', 'is_active']
@@ -126,8 +129,8 @@ class AppUserAdmin(BaseUserAdmin):
 @admin.register(CarModel)
 class CarModelAdmin(admin.ModelAdmin):
     """
-    Admin for Car Models with validation (Issue #86)
-    Enhanced UX with fieldsets and filters
+    Admin interface for CarModel with validation (Issue #86).
+    Organized fieldsets for better UX.
     """
     list_display = ['model_name', 'brand', 'vehicle_type', 'fuel_type', 'transmission', 'seats', 'daily_price']
     list_filter = ['brand', 'vehicle_type', 'fuel_type', 'transmission']
@@ -152,8 +155,8 @@ class CarModelAdmin(admin.ModelAdmin):
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
     """
-    Admin for Cars with validation (Issue #86)
-    Enhanced UX with filters and search
+    Admin interface for Car instances with validation (Issue #86).
+    Includes filters and search optimization.
     """
     list_display = ['license_plate', 'car_model', 'color', 'mileage']
     list_filter = ['color', 'car_model__brand']
@@ -175,8 +178,8 @@ class CarAdmin(admin.ModelAdmin):
 @admin.register(Reservation)
 class ReservationAdmin(admin.ModelAdmin):
     """
-    Admin for Reservations with auto-calculation and validation (Issue #86)
-    Enhanced UX with date hierarchy and filters
+    Admin interface for Reservation management (Issue #86).
+    Supports date hierarchy and auto-calculated fields.
     """
     list_display = ['id', 'user', 'car', 'start_date', 'end_date', 'coverage', 'rate', 'total_price']
     list_filter = ['start_date', 'coverage']
@@ -199,4 +202,4 @@ class ReservationAdmin(admin.ModelAdmin):
         }),
     )
     
-    readonly_fields = ['coverage', 'rate', 'total_price']  # Auto-calculated, read-only
+    readonly_fields = ['coverage', 'rate', 'total_price']  # Auto-calculated fields

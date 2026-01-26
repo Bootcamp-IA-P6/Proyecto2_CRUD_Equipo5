@@ -1,12 +1,16 @@
 // renting/static/renting/js/layout.js
 
+/**
+ * Toggle main sidebar visibility
+ */
 function toggleSidebar() {
     const sidebar = document.getElementById('main-sidebar');
     sidebar.classList.toggle('active');
 }
 
-// renting/static/renting/js/layout.js
-
+/**
+ * Update sidebar content based on authentication status
+ */
 async function updateSidebar() {
     const container = document.getElementById('sidebar-auth-content');
     if (!container) return;
@@ -14,7 +18,7 @@ async function updateSidebar() {
     if (Auth.isLoggedIn()) {
         let userName = "User";
         try {
-            // ⚠️ 수정: 백엔드 팀원이 변경한 최신 API 주소 사용
+            // Updated: Use latest backend API endpoint
             const res = await fetchWithAuth('/api/profile/me/');
             if (res && res.ok) {
                 const data = await res.json();
@@ -47,7 +51,7 @@ async function updateSidebar() {
     }
 }
 
-// 클릭 외부 시 사이드바 닫기 (추가하면 좋음)
+// Close sidebar when clicking outside (recommended addition)
 document.addEventListener('click', (e) => {
     const sidebar = document.getElementById('main-sidebar');
     const toggleBtn = document.querySelector('.nav-toggle-btn');
@@ -56,4 +60,5 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Initialize sidebar on DOM load
 document.addEventListener('DOMContentLoaded', updateSidebar);

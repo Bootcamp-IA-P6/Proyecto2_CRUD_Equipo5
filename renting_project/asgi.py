@@ -1,16 +1,13 @@
 """
-ASGI config for renting_project project.
+ASGI configuration for renting_project.
 
-It exposes the ASGI callable as a module-level variable named ``application``.
+Exposes the ASGI callable as a module-level variable named 'application'.
 
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
+See https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/ for details.
 """
-
 import os
-
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "renting_project.settings")
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'renting_project.settings')
 
 application = get_asgi_application()

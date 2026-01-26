@@ -1,17 +1,20 @@
 // renting/static/renting/js/car_detail.js
 
 /**
- * 이미지 URL이 유효한지(존재하는지) 확인하는 헬퍼 함수
+ * Helper function to check if image URL exists/loads successfully
  */
 function checkImageExists(url) {
     return new Promise((resolve) => {
         const img = new Image();
-        img.onload = () => resolve(true);  // 로드 성공
-        img.onerror = () => resolve(false); // 로드 실패 (파일 없음)
+        img.onload = () => resolve(true);  // Load successful
+        img.onerror = () => resolve(false); // Load failed (file missing)
         img.src = url;
     });
 }
 
+/**
+ * Load car details from API and populate page
+ */
 async function loadCarDetail() {
     const pathParts = window.location.pathname.split('/');
     const carId = pathParts[pathParts.length - 2];
@@ -21,7 +24,7 @@ async function loadCarDetail() {
 
     const c = await response.json();
 
-    // [기존 데이터 매핑 로직은 동일하게 유지]
+    // Populate car detail fields from API response
     document.getElementById('car-brand').innerText = c.brand_name;
     document.getElementById('car-name').innerText = c.car_model_name.replace('_', ' ');
     document.getElementById('breadcrumb-model').innerText = c.car_model_name;
@@ -33,19 +36,19 @@ async function loadCarDetail() {
     document.getElementById('car-plate').innerText = c.license_plate;
     document.getElementById('reserve-link').href = `/reservations/create/?car=${c.id}`;
 
-    // --- 🖼 캐러셀 이미지 로직 (핵심) ---
+    // --- Image carousel logic (core functionality) ---
     const carouselInner = document.getElementById('carousel-images');
-    carouselInner.innerHTML = ''; // 스피너 제거
+    carouselInner.innerHTML = ''; // Remove spinner
 
     const brandLow = c.brand_name.toLowerCase().replace(/\s/g, '_');
     const modelLow = c.car_model_name.toLowerCase().replace(/\s/g, '_');
     
     const potentialImages = [];
     
-    // 1. DB에 등록된 이미지가 있다면 첫 번째 후보로 등록
+    // 1. Use DB image if available (first priority)
     if (c.car_model_image) potentialImages.push(c.car_model_image);
 
-    // 2. 야매(Static) 경로 후보들 등록 (1번부터 3번까지 체크)
+    // 2. Add static fallback paths (check images 1-3)
     for (let i = 1; i <= 3; i++) {
         potentialImages.push(`/static/renting/images/cars/${brandLow}_${modelLow}_${i}.jpg`);
     }
@@ -63,7 +66,7 @@ async function loadCarDetail() {
         }
     }
 
-    // 3. 만약 단 하나의 이미지도 로드되지 않았다면 placeholder 표시
+    // 3. Show placeholder if no images loaded
     if (!loadedAny) {
         carouselInner.innerHTML = `
             <div class="carousel-item active">
@@ -72,20 +75,21 @@ async function loadCarDetail() {
         `;
     }
 
-    // 🔥 [핵심 추가] 이미지가 다 들어간 후 부트스트랩 캐러셀 수동 초기화
+    // Initialize Bootstrap carousel after images loaded
     const carCarouselEl = document.querySelector('#carCarousel');
     
-    // 만약 이미지가 2개 이상일 때만 자동으로 돌아가게 설정
+    // Auto-rotate only if 2+ images
     if (loadedAny && carouselInner.children.length > 1) {
         new bootstrap.Carousel(carCarouselEl, {
-            interval: 3000, // 3초마다 전환
+            interval: 3000, // Switch every 3 seconds
             ride: 'carousel'
         });
     } else {
-        // 이미지가 하나뿐이면 컨트롤 버튼(화살표) 숨기기 (선택 사항)
+        // Hide controls if single image (optional)
         const controls = carCarouselEl.querySelectorAll('.carousel-control-prev, .carousel-control-next');
         controls.forEach(c => c.style.display = 'none');
     }
 }
 
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', loadCarDetail);

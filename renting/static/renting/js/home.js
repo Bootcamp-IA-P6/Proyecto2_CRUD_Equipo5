@@ -9,19 +9,19 @@ let isLoading = false;
 function getFilterParams() {
     const params = new URLSearchParams();
     
-    // 1. 기본 검색 및 정렬
+    // Basic search and sorting
     const search = document.getElementById('search-input').value;
     const sort = document.getElementById('sort-order').value;
     if (search) params.append('search', search);
     if (sort) params.append('ordering', sort);
 
-    // 2. 날짜 가용성 (백엔드 get_queryset 로직과 매칭)
+    // Date availability filters
     const from = document.getElementById('available-from').value;
     const to = document.getElementById('available-to').value;
     if (from) params.append('available_from', from);
     if (to) params.append('available_to', to);
 
-    // 3. 상세 스펙 필터 (ERD 구조에 맞춘 키값)
+    // Detailed spec filters
     const type = document.getElementById('filter-type').value;
     const trans = document.getElementById('filter-trans').value;
     const seats = document.getElementById('filter-seats').value;
@@ -79,7 +79,7 @@ async function loadVehicleTypes() {
 }
 
 /**
- * 카드 렌더링
+ * Render vehicle cards
  */
 function renderCards(items) {
     const grid = document.getElementById('vehicle-list');
@@ -109,9 +109,8 @@ function renderCards(items) {
     });
 }
 
-
 /**
- * 상태에 따른 버튼/스피너 제어
+ * Control buttons/spinner state based on loading status
  */
 function toggleUIState(loading) {
     const btn = document.getElementById('load-more-btn');
@@ -124,11 +123,11 @@ function toggleUIState(loading) {
     } else {
         spinner.classList.add('d-none');
         if (nextPageUrl) {
-            btn.classList.remove('d-none'); // 다음 데이터가 있으면 버튼 노출
+            btn.classList.remove('d-none'); // Show button if more data available
         } else {
             btn.classList.add('d-none');
             if (document.getElementById('vehicle-list').children.length > 0) {
-                msg.classList.remove('d-none'); // 진짜 끝이면 메시지 노출
+                msg.classList.remove('d-none'); // Show end message
             }
         }
     }
@@ -144,10 +143,10 @@ function clearAllFilters() {
 
 
 /**
- * ⚠️ 무한 스크롤 옵저버 (Intersection Observer)
+ * Infinite scroll observer (Intersection Observer)
  */
 const observer = new IntersectionObserver((entries) => {
-    // 센서가 화면에 보이고, 현재 로딩 중이 아니며, 다음 페이지가 있을 때만 실행
+    // Execute only when sentinel visible, not loading, and next page exists
     if (entries[0].isIntersecting && !isLoading && nextPageUrl) {
         console.log("Automatic load triggered by scroll...");
         loadVehicles();
@@ -158,11 +157,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadVehicleTypes();
     loadVehicles();
     
-    // 바닥 감지 시작
+    // Start bottom detection
     const sentinel = document.getElementById('scroll-sentinel');
     if (sentinel) observer.observe(sentinel);
 });
-
 
 document.addEventListener('DOMContentLoaded', () => {
     loadVehicleTypes();
