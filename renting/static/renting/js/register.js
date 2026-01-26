@@ -1,7 +1,10 @@
 // renting/static/renting/js/register.js
 
 function clearErrors() {
-    document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+    const form = document.getElementById('res-create-form');
+    if (form) {
+        form.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+    }
     document.getElementById('form-status').classList.add('d-none');
 }
 
