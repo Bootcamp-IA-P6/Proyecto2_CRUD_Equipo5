@@ -3,6 +3,9 @@
 let nextPageUrl = '/api/cars/';
 let isLoading = false;
 
+/**
+ * UI 입력값을 읽어 API 쿼리 스트링 생성
+ */
 function getFilterParams() {
     const params = new URLSearchParams();
     
@@ -24,33 +27,10 @@ function getFilterParams() {
     const seats = document.getElementById('filter-seats').value;
 
     if (type) params.append('car_model__vehicle_type', type);
-    if (trans) params.append('transmission', trans);
-    if (seats) params.append('seats', seats);
+    if (trans) params.append('car_model__transmission__name', trans); // 명칭으로 필터링
+    if (seats) params.append('car_model__seats', seats);
 
     return params.toString();
-}
-
-/**
- * Reset all filters
- */
-function clearAllFilters() {
-    document.querySelectorAll('.form-control, .form-select').forEach(el => el.value = '');
-    loadVehicles(true);
-}
-
-async function loadVehicleTypes() {
-    const res = await fetch('/api/vehicle-types/');
-    if (res.ok) {
-        const data = await res.json();
-        const types = data.results || data;
-        const select = document.getElementById('filter-type');
-        // Preserve existing options and append new ones
-        let options = '<option value="">All Types</option>';
-        types.forEach(t => {
-            options += `<option value="${t.id}">${t.name}</option>`;
-        });
-        select.innerHTML = options;
-    }
 }
 
 async function loadVehicles(reset = false) {
@@ -70,7 +50,8 @@ async function loadVehicles(reset = false) {
         if (!response) throw new Error("Auth failed");
 
         const data = await response.json();
-        const items = data.results || [];
+        // Pagination 결과(results) 혹은 일반 배열 대응
+        const items = data.results || data;
         nextPageUrl = data.next;
 
         renderCards(items);
@@ -78,7 +59,22 @@ async function loadVehicles(reset = false) {
         console.error("Load failed:", e);
     } finally {
         isLoading = false;
-        toggleUIState(false); // Hide loading UI
+        toggleUIState(false);
+    }
+}
+
+async function loadVehicleTypes() {
+    const res = await fetch('/api/vehicle-types/');
+    if (res.ok) {
+        const data = await res.json();
+        const types = data.results || data;
+        const select = document.getElementById('filter-type');
+        // 기존 옵션 유지하고 추가
+        let options = '<option value="">All Types</option>';
+        types.forEach(t => {
+            options += `<option value="${t.id}">${t.name}</option>`;
+        });
+        select.innerHTML = options;
     }
 }
 
@@ -88,31 +84,28 @@ async function loadVehicles(reset = false) {
 function renderCards(items) {
     const grid = document.getElementById('vehicle-list');
     items.forEach(c => {
-        const card = document.createElement('div');
-        card.className = 'vehicle-card';
-        // Wrap card/image in <a> tag for detail page navigation
-        card.innerHTML = `
+        const div = document.createElement('div');
+        div.className = 'vehicle-card'; // CSS 클래스명 유지
+        div.innerHTML = `
             <a href="/cars/${c.id}/" class="text-decoration-none">
                 <div class="card-img-wrapper">
                     <img src="${c.car_model_image || '/static/renting/images/cars/placeholder.png'}" alt="${c.car_model_name}">
                 </div>
             </a>
-            <div class="card-info">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <span class="text-muted small text-uppercase fw-bold">${c.brand_name}</span>
-                        <h5 class="mb-0 text-dark">${c.car_model_name}</h5>
-                    </div>
+            <div class="card-info p-3">
+                <div class="mb-2">
+                    <span class="text-muted small text-uppercase fw-bold">${c.brand_name || 'Brand'}</span>
+                    <h5 class="mb-0 text-dark fw-bold">${c.car_model_name}</h5>
                 </div>
+                <p class="text-muted small mb-2">${c.license_plate} | ${c.mileage ? c.mileage.toLocaleString() : 0} km</p>
                 <hr>
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="price-tag">${c.daily_price || '0'}€ <small class="text-muted fw-normal" style="font-size: 0.7rem;">/day</small></span>
-                    <!-- Deep link: pass car ID to reservation creation -->
+                    <span class="price-tag fw-bold text-primary fs-5">${c.daily_price || '0'}€ <small class="text-muted fw-normal" style="font-size: 0.7rem;">/day</small></span>
                     <a href="/reservations/create/?car=${c.id}" class="btn btn-accent btn-sm px-3">Book Now</a>
                 </div>
             </div>
         `;
-        grid.appendChild(card);
+        grid.appendChild(div);
     });
 }
 
@@ -139,6 +132,15 @@ function toggleUIState(loading) {
         }
     }
 }
+
+/**
+ * 필터 초기화
+ */
+function clearAllFilters() {
+    document.querySelectorAll('.form-control, .form-select').forEach(el => el.value = '');
+    loadVehicles(true);
+}
+
 
 /**
  * Infinite scroll observer (Intersection Observer)

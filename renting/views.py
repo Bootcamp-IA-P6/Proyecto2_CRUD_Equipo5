@@ -1,6 +1,8 @@
 import logging
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets, permissions
 from rest_framework.decorators import action
@@ -8,6 +10,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from .filters import CarFilter, ReservationFilter
 from rest_framework_simplejwt.tokens import RefreshToken
+from .filters import CarFilter, ReservationFilter
 from .permissions import IsReservationOwnerOrStaff, IsStaffPermission, IsStaffOrReadOnlyPermission 
 from .models import (
     AppUser, VehicleType, Brand, FuelType, Color, Transmission,
@@ -283,23 +286,75 @@ class CarModelViewSet(viewsets.ModelViewSet):
 
 
 class CarViewSet(viewsets.ModelViewSet):
-    """Public read + Admin CRUD for cars with filtering"""
-    queryset = Car.objects.select_related('car_model', 'car_model__brand', 'color').all()
-    serializer_class = CarSerializer
-    permission_classes = [IsStaffOrReadOnlyPermission] 
+    """
+    ViewSet for managing Car resources.
 
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    Provides CRUD operations with:
+    - Optimized queryset using select_related
+    - Filtering, ordering, and unified keyword search
+    - Availability filtering based on reservation dates
+    - Logging for create and delete actions
+    """
+
+    # Base queryset optimized with select_related to reduce DB queries
+    queryset = Car.objects.select_related(
+        'car_model',
+        'car_model__brand',
+        'color'
+    ).all()
+
+    serializer_class = CarSerializer
+    permission_classes = [IsStaffOrReadOnlyPermission]
+
+    # Enable filtering and ordering backends
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = CarFilter
-    search_fields = ['license_plate', 'car_model__model_name']
     ordering_fields = ['license_plate', 'car_model__daily_price', 'mileage']
 
+    def get_queryset(self):
+        """
+        Override base queryset to apply:
+        - Unified keyword search (Brand OR Model)
+        - Availability filtering by date range
+
+        Returns a filtered queryset based on query parameters.
+        """
+        # Get the base queryset before filter backends are applied
+        queryset = super().get_queryset()
+
+        # Unified keyword search across brand name and model name
+        search_query = self.request.query_params.get('search', None)
+        if search_query:
+            queryset = queryset.filter(
+                Q(car_model__brand__name__icontains=search_query) |
+                Q(car_model__model_name__icontains=search_query)
+            )
+
+        # Availability filtering: exclude cars with overlapping reservations
+        date_from = self.request.query_params.get('available_from', None)
+        date_to = self.request.query_params.get('available_to', None)
+
+        if date_from and date_to:
+            occupied_car_ids = Reservation.objects.filter(
+                start_date__lte=date_to,
+                end_date__gte=date_from
+            ).values_list('car_id', flat=True)
+
+            queryset = queryset.exclude(id__in=occupied_car_ids)
+
+        return queryset
+
     def perform_create(self, serializer):
-        """Log car creation"""
+        """
+        Save a new Car instance and log the creation event.
+        """
         car = serializer.save()
         logger.info(f"Car created: {car.license_plate}")
 
     def perform_destroy(self, instance):
-        """Log car deletion"""
+        """
+        Delete a Car instance and log the deletion event.
+        """
         logger.info(f"Car deleted: {instance.license_plate}")
         instance.delete()
 

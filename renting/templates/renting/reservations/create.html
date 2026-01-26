@@ -2,44 +2,68 @@
 {% load static %}
 
 {% block content %}
-<div class="card shadow p-4 mx-auto" style="max-width: 600px; margin-top: 30px;">
-    <!-- Page Title -->
-    <h3 class="mb-4 text-center">New Reservation</h3>
+<style>
+    body { background-color: #f4f7f9 !important; }
+    .res-card {
+        border-radius: 1.5rem;
+        background: #ffffff;
+        border: none;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.04);
+    }
+    .res-header {
+        background: linear-gradient(135deg, #1a2a6c, #2a4858);
+        border-radius: 1.5rem 1.5rem 0 0;
+        padding: 2rem;
+    }
+    .form-select, .form-control {
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+    }
+</style>
 
-    <!-- Global Error Alert Container -->
-    <div id="global-error" class="alert alert-danger d-none mb-3"></div>
-
-    <!-- Reservation Form -->
-    <form id="res-create-form" novalidate>
-        <!-- Vehicle Selection -->
-        <div class="mb-3">
-            <label class="form-label">Select Vehicle</label>
-            <select id="car-select" class="form-select" required>
-                <option value="">Loading available cars...</option>
-            </select>
-            <div id="error-car" class="text-danger small mt-1"></div>
-        </div>
-
-        <!-- Date Selection Row -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Pick-up Date</label>
-                <input type="date" id="start_date" class="form-control" required>
-                <div id="error-start_date" class="text-danger small mt-1"></div>
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card res-card">
+            <div class="res-header text-center">
+                <h4 class="text-white fw-bold mb-0">Book Your Vehicle</h4>
+                <p class="text-white-50 small mb-0 mt-1">Select dates and confirm your selection.</p>
             </div>
-            <div class="col-md-6 mb-3">
-                <label>Return Date</label>
-                <input type="date" id="end_date" class="form-control" required>
-                <div id="error-end_date" class="text-danger small mt-1"></div>
+            
+            <div class="card-body p-5">
+                <div id="global-error" class="alert alert-danger d-none py-2 small border-0 mb-4"></div>
+
+                <form id="res-create-form" novalidate>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted">VEHICLE SELECTION</label>
+                        <select id="car-select" class="form-select border-light-subtle bg-light-subtle fw-semibold" required>
+                            <option value="">Searching for available fleet...</option>
+                        </select>
+                        <div id="error-car" class="text-danger small mt-1"></div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">PICK-UP DATE</label>
+                            <input type="date" id="start_date" class="form-control border-light-subtle shadow-sm" required>
+                            <div id="error-start_date" class="text-danger small mt-1"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted">RETURN DATE</label>
+                            <input type="date" id="end_date" class="form-control border-light-subtle shadow-sm" required>
+                            <div id="error-end_date" class="text-danger small mt-1"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-5">
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow mb-3">Request Reservation</button>
+                        <div class="text-center">
+                            <a href="{% url 'reservation_list' %}" class="text-muted small text-decoration-none">← Return to List</a>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
-
-        <!-- Form Actions -->
-        <div class="mt-4">
-            <button type="submit" class="btn btn-primary w-100 py-2">Confirm Reservation</button>
-            <a href="{% url 'reservation_list' %}" class="btn btn-link w-100 mt-2 text-decoration-none text-muted">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
 
 <!-- Reservation Form JavaScript -->
