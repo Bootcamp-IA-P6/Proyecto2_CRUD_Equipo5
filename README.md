@@ -1,220 +1,388 @@
-# 🚗 Vehicle Rental System
+# 🚗 Car Rental System - Backend API
 
-A **vehicle rental management system** developed as a **web application** based on a **REST API**.
-This project provides a **complete CRUD API** for managing users, vehicles, and reservations.
+A comprehensive car rental management system built with **Django REST Framework** and **JWT authentication**. This project implements secure user management, vehicle inventory, and reservation handling with role-based access control.
+
+---
+
+## 📑 Table of Contents
+
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Installation](#-installation)
+- [Database Setup](#-database-setup)
+- [API Documentation](#-api-documentation)
+- [Authentication](#-authentication)
+- [Testing](#-testing)
+- [Business Logic](#-business-logic)
+- [Database Diagram (ERD)](#-database-diagram-erd)
+- [Project Retrospective](#-project-retrospective)
+- [Contributors](#-contributors)
+
 
 ---
 
 ## ✨ Features
 
-* 🔐 User management
-* 🚘 Vehicle management
-* 📅 Reservation system
-* 🛠️ Full CRUD operations
-* 🌐 RESTful API architecture
-* 🧑‍💼 Admin panel support
+### User Management
+- 🔐 JWT-based authentication (login, signup, token refresh)
+- 👤 User profile management with password confirmation
+- 🔒 Secure password change endpoint
+- 🗑️ Account self-deletion with password verification
+
+### Vehicle Management
+- 🚙 Complete vehicle catalog (cars, models, brands, specifications)
+- 📊 Admin-only vehicle creation and management
+- 🔍 Advanced filtering and search capabilities
+- ✅ Data validation at model level (negative values prevention, range checks)
+
+### Reservation System
+- 📅 Create and manage reservations
+- 🔐 Password-protected reservation deletion
+- 🚫 Past reservation protection (read-only)
+- 📈 Automatic price calculation based on:
+  - Rental duration
+  - User age (Young Driver / Standard / Senior pricing)
+  - Daily vehicle rate
+- 🔍 Filter reservations by status (upcoming/past)
+
+### Security & Permissions
+- 🛡️ Role-based access control (Staff vs Regular users)
+- 🔒 User data isolation (users only see their own data)
+- ✅ Password confirmation for sensitive operations
+- 🚫 Comprehensive validation (API + Admin)
 
 ---
 
-## 🚀 Quick Installation
+## 🛠️ Tech Stack
 
-Clone the repository and install dependencies:
+| Component | Technology |
+|-----------|-----------|
+| **Framework** | Django 6.0.1 |
+| **API** | Django REST Framework 3.15+ |
+| **Authentication** | Simple JWT (djangorestframework-simplejwt) |
+| **Database** | MySQL 8.0+ |
+| **Validation** | Django Validators + Custom clean() methods |
+| **Filtering** | django-filter |
+| **Testing** | Django TestCase + APITestCase |
+| **Admin** | Django Admin (enhanced with custom configurations) |
 
+---
+
+## 📁 Project Structure
+```
+proyecto/
+├── renting_project/          # Main Django project
+│   ├── settings.py           # Project settings
+│   ├── urls.py              # Root URL configuration
+│   └── wsgi.py              # WSGI config
+│
+├── renting/                  # Main application
+│   ├── models.py            # Data models (User, Car, Reservation, etc.)
+│   ├── serializers.py       # DRF serializers
+│   ├── views.py             # ViewSets and business logic
+│   ├── profile_views.py     # User profile endpoints
+│   ├── permissions.py       # Custom permission classes
+│   ├── admin.py             # Django Admin configuration
+│   ├── exceptions.py        # DRF exceptions logic
+│   ├── filters.py           # Filters logic for business
+│   ├── pagination.py        # Dynamic page size
+│   ├── apps.py              # Django apps
+│   ├── urls.py              # App-level routing
+│   │
+│   ├── tests/               # Test suite
+│   │   ├── test_auth.py           # Authentication tests
+│   │   ├── test_profile.py        # Profile management tests
+│   │   ├── test_reservations.py   # Reservation tests
+│   │   ├── test_vehicles.py       # Vehicle tests
+│   │   └── test_permissions.py    # Permission tests
+│   │
+│   └── docs/
+│       └── erd/             # Database diagrams
+│
+├── docs/
+│   └── API_GUIDE.md         # Complete API documentation
+│
+├── manage.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## 🚀 Installation
+
+### Prerequisites
+- Python 3.10+
+- MySQL 8.0+
+- pip
+- virtualenv (recommended)
+
+### Setup Instructions
+
+1. **Clone the repository**
 ```bash
-git clone https://github.com/Bootcamp-IA-P6/Proyecto2_CRUD_Equipo5.git
-cd Proyecto2_CRUD_Equipo5
+git clone https://github.com/YOUR_ORG/proyecto.git
+cd proyecto
+```
 
-
-# Create virtual environment
+2. **Create and activate virtual environment**
+```bash
 python -m venv venv
 
-
-# Activate virtual environment
 # Windows
 venv\Scripts\activate
 
-
-# Linux / macOS
+# Linux/Mac
 source venv/bin/activate
+```
 
-
-# Install dependencies
+3. **Install dependencies**
+```bash
 pip install -r requirements.txt
 ```
 
----
+## 🗄️ Database Setup
 
-## 🛠 Database Setup & Initialization
-Follow these steps to set up the database schema and load initial sample data.
-
-### 1. Create Database (Manual Step)
-Before running migrations, you must manually create the database in your MySQL server:
+### MySQL Database Creation
 ```sql
-CREATE DATABASE renting_db;
+CREATE DATABASE renting_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
+4. **Configure environment variables**
 
-### 2. Environment Configuration
-Create a `.env` file in the root directory and configure your credentials:
+Create a `.env` file in the project root:
 ```env
 DB_NAME=renting_db
-DB_USER=root
+DB_USER=your_mysql_user
 DB_PASSWORD=your_mysql_password
 DB_HOST=127.0.0.1
 DB_PORT=3306
 
-SECRET_KEY=your-django-secret-key
+SECRET_KEY=your-secret-key-here
 DEBUG=True
 ```
 
-
-### 3. Database Migrations
-Generate and apply the table schema:
+5. **Run migrations**
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-If needed:
-```bash
-python manage.py createsuperuser
-```
+### Initial Data (Optional)
 
-
-### 4. Seeding Sample Data
-Run the custom management command to populate the database with 15 Users, 15 Cars, and 25 Reservations.
+Run the custom management command to populate the database with 110 Users, 50 Cars, and 230 Reservations.
 ```bash
 python manage.py seed_data
 ```
 
-Note:
-- This command ensures all users are created with properly hashed passwords, allowing immediate login via JWT.
-- Reservations are created with automatically calculated prices and coverage levels (Young Driver, Standard, Senior/Premium) based on the users' birth dates.
-
-
-### 5. Default Credentials
-After seeding, you can log in with any of the 15 generated accounts.
-- **Username**: user1@example.com ~ user15@example.com
-- **Password (for all)**: pass1234
-
 ---
 
-## ▶️ Run Project
+6. **Create superuser**
+```bash
+python manage.py createsuperuser
+```
 
-Start the development server:
-
+7. **Run development server**
 ```bash
 python manage.py runserver
 ```
 
-🌐 Open in your browser:
-**[http://localhost:8000](http://localhost:8000)**
+The API will be available at `http://localhost:8000/`
+
 
 ---
 
-## 🚀 API Endpoints Overview
+## 📚 API Documentation
 
-| Category | Method | Endpoint | Auth Required |
-| :--- | :--- | :--- | :--- |
-| **Auth** | POST | `/api/token/` | No |
-| **Users** | POST | `/api/users/` (Registration) | No |
-| | GET | `/api/users/me/` | **Yes** |
-| **Cars** | GET | `/api/cars/` | **Yes** |
-| **Reservations**| GET | `/api/reservations/` | **Yes** |
-| | POST | `/api/reservations/` | **Yes** |
+Complete API documentation is available in **[docs/API_GUIDE.md](docs/API_GUIDE.md)**.
 
-### 🔒 Quick Note on Authentication
-1. Login via `/api/token/` to receive an `access` token.
-2. Include the token in the header: `Authorization: Bearer <your_token>`.
+### Quick Start
 
-For detailed API usage and JWT authentication flow, please refer to the [API_GUIDE.md](./docs/API_GUIDE.md).
+#### 1. **Register a new user**
+```bash
+POST /api/users/
+Content-Type: application/json
 
----
-
-## 🏗️ Project Structure
-
-```text
-renting/
-├── models/         # User, Vehicle, Reservation
-├── serializers/    # API serialization
-├── views/          # CRUD logic
-├── urls/           # API routes
-├── templates/      # HTML pages
-└── admin/          # Admin panel
+{
+  "email": "user@example.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "password": "SecurePass123!",
+  "birth_date": "1990-01-01",
+  "license_number": "ABC123456"
+}
 ```
+
+#### 2. **Login and get JWT tokens**
+```bash
+POST /api/token/
+Content-Type: application/json
+
+{
+  "username": "user@example.com",
+  "password": "SecurePass123!"
+}
+
+# Response:
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### 3. **Access protected endpoints**
+```bash
+GET /api/profile/me/
+Authorization: Bearer <access_token>
+```
+
+See **[API_GUIDE.md](docs/API_GUIDE.md)** for complete endpoint documentation.
+
+---
+
+## 🔐 Authentication
+
+This project uses **JWT (JSON Web Tokens)** for authentication.
+
+### Token Flow
+
+1. **Obtain tokens**: `POST /api/token/` with email/password
+2. **Use access token**: Include in `Authorization: Bearer <token>` header
+3. **Refresh token**: `POST /api/token/refresh/` when access token expires
+
+### Token Lifetimes
+
+- **Access Token**: 30 minutes
+- **Refresh Token**: 1 day
+
+---
+
+## 🧪 Testing
+
+The project includes comprehensive test coverage (45+ tests).
+
+### Run all tests
+```bash
+python manage.py test renting.tests
+```
+
+### Run specific test file
+```bash
+python manage.py test renting.tests.test_auth
+python manage.py test renting.tests.test_reservations
+```
+
+
+### Test Coverage
+
+| Module | Tests | Coverage |
+|--------|-------|----------|
+| Authentication | 10 tests | Signup, login, token refresh, 401/403 |
+| Profile Management | 10 tests | GET/PUT/PATCH/DELETE, password validation |
+| Reservations | 11 tests | CRUD, filtering, deletion rules |
+| Vehicles | 9 tests | Cars, models, validation |
+| Permissions | 5 tests | Staff-only, authorization |
+| **Total** | **44 tests** | **Complete API coverage** |
+
+---
+
+## 💼 Business Logic
+
+### Automatic Price Calculation
+
+Reservations automatically calculate pricing based on:
+```python
+# User age determines rate multiplier
+< 25 years   → Young Driver (rate: 1.5x)
+25-65 years  → Standard (rate: 1.0x)
+> 65 years   → Senior/Premium (rate: 1.2x)
+
+# Total price formula
+total_price = (end_date - start_date + 1) × daily_price × rate
+```
+
+### Data Validation
+
+**Model-level validation** prevents:
+- ❌ Negative values (seats, mileage, prices)
+- ❌ Invalid ranges (seats: 1-50, year: 1900-2100)
+- ❌ Overlapping reservations for same vehicle
+- ❌ End date before start date
+- ❌ Zero or negative prices
+
+**Permission-based validation**:
+- 🔒 All profile modifications require password confirmation
+- 🔒 Reservation deletion requires password
+- 🔒 Past reservations are read-only (cannot be deleted)
+- 🔒 Users can only access their own data (except staff)
+
 ---
 
 ## 📐 Database Diagram (ERD)
 
-This diagram represents the **single source of truth** for our database structure and relationships. It includes all core entities: Users, Vehicles (Cars), and Reservations, along with their respective lookup tables.
+The Entity-Relationship Diagram is located in `renting/docs/erd/`.
 
-![ERD](renting/docs/erd/erd.svg)
+### Core Models
+```
+AppUser ──┬── Reservation ──── Car ──── CarModel ──┬── Brand
+          │                                        ├── VehicleType
+          │                                        ├── FuelType
+          └──────────────────────────────────────── Transmission
+                                                    
+                                         Color ──── Car
+```
 
-### 📂 Database Schema Documentation
+### Key Relationships
 
-#### 1. Configuration & Master Tables
-* **Brand:** Stores car manufacturers. [cite_start]It has a **1:N relationship** with `CarModel`[cite: 1, 23, 30].
-* **VehicleType:** Defines categories (SUV, Sedan, etc.). [cite_start]It has a **1:N relationship** with `CarModel`[cite: 6, 23, 32].
-* **FuelType:** Manages fuel variants (Diesel, Electric, etc.). [cite_start]It has a **1:N relationship** with `CarModel`[cite: 10, 23, 36].
-* **Transmission:** Specifies gearbox types (Manual/Automatic). [cite_start]It has a **1:N relationship** with `CarModel`[cite: 20, 23, 38].
-* **Color:** Stores the color palette. [cite_start]It maintains a **1:N relationship** with `Car`[cite: 13, 42, 49].
+- **AppUser → Reservation**: One-to-many (a user can have multiple reservations)
+- **Car → Reservation**: One-to-many (a car can be reserved multiple times)
+- **CarModel → Car**: One-to-many (a model can have multiple car instances)
+- **Brand/VehicleType/etc. → CarModel**: Many-to-one (lookup tables)
 
-#### 2. Inventory Structure
-* **CarModel:** The central entity for technical specifications and pricing. [cite_start]It has a **1:N relationship** with `Car`[cite: 23, 42, 45].
-* [cite_start]**Car:** Represents the physical assets, including unique license plates and mileage[cite: 42, 47, 51].
-
-#### 3. Business Logic & Operations
-* **AppUser:** Custom user model for customers. [cite_start]It has a **1:N relationship** with `Reservation`[cite: 53, 60, 87].
-* **Reservation:** The transactional entity linking users and cars for specific dates. [cite_start]It maintains **N:1 relationships** with both `AppUser` and `Car`[cite: 60, 87, 91].
-
----
-
-## 📐 Database Diagram (ERD)
-
-This diagram represents the final database schema, including business rules for coverage and price calculations.
-
-![ERD](renting/docs/erd/erd.svg)
+**View full ERD**: See `renting/docs/erd/erd.png`
 
 ---
 
-## 📂 Database Schema Documentation
+## 👥 Contributors
 
-#### 1. Master Tables (Configuration)
-* **Brand**: Stores manufacturers. 1:N relationship with `CarModel`.
-* **VehicleType**: Defines categories (SUV, Sedan). 1:N relationship with `CarModel`.
-* **FuelType**: Specifies energy source. 1:N relationship with `CarModel`.
-* **Transmission**: Manual or automatic. 1:N relationship with `CarModel`.
-* **Color**: Aesthetic property of each physical unit. 1:N relationship with `Car`.
+This project was developed as part of an educational program. Special thanks to:
 
-#### 2. Inventory Relationships
-* **CarModel**: Central table for specs and `daily_price`. 1:N relationship with `Car`.
-* **Car**: Actual asset with license plate and mileage. 1:N relationship with `Reservation`.
+- **Mirae** – Project Lead, Backend & Frontend Development  
+  GitHub: [https://github.com/KangMirae](https://github.com/KangMirae)
 
-#### 3. Business Relationships
-* **AppUser**: Stores customer info. The `birth_date` determines the coverage level. 1:N relationship with `Reservation`.
-* **Reservation**: Links user and car. Calculates `total_price` by multiplying `daily_price` by the applied `rate`.
+- **Raúl** – Database Design & Backend Development  
+  GitHub: [https://github.com/RaulCtm](https://github.com/RaulCtm)
+
+- **Isabel** – QA, Documentation & Backend Development  
+  GitHub: [https://github.com/isrodam](https://github.com/isrodam)
 
 ---
 
-## 🧰 Tech Stack
+## 📘 Project Retrospective
 
-* 🐍 Python
-* 🌐 Django
-* 🔗 Django REST Framework
-* 🐬 MySQL
-* ⚙️ dotenv
+This project includes a detailed Project Retrospective Document, which summarizes the overall development process — covering achievements, challenges, lessons learned, and personal insights from each team member.
+
+It provides a transparent view of the project’s evolution, focusing on:
+
+- Key successes and obstacles faced during development
+
+- Lessons learned from sprint‑based collaboration
+
+- Improvement areas and reflections from individual contributors
+
+For an in‑depth overview, please visit the full retrospective document:
+
+👉 **[PROJECT_RETROSPECTIVE.md](docs/PROJECT_RETROSPECTIVE.md)**
+---
+
+## 🙏 Acknowledgments
+
+- Django Software Foundation for the excellent framework
+- Django REST Framework team for the powerful API toolkit
+- All contributors and reviewers who helped improve this project
 
 ---
 
-## 📄 Project Retrospective
-You can find the full project retrospective and team reflections here: [Project Retrospective](./docs/PROJECT_RETROSPECTIVE.md)
-
----
-
-## 📄 License
-
-This project is for **educational purposes**.
-
----
-
-💙 Built with passion by **Equipo 5**
+**Project Status**: ✅ Active Development  
+**Last Updated**: January 2026
