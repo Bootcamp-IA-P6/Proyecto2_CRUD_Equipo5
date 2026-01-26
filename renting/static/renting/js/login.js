@@ -1,7 +1,10 @@
 // renting/static/renting/js/login.js
 
 function clearLoginErrors() {
-    document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+    const form = document.getElementById('res-create-form');
+    if (form) {
+        form.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+    }    
     const container = document.getElementById('global-alert-container');
     if (container) container.innerHTML = '';
 }
@@ -19,43 +22,42 @@ document.getElementById('login-form').onsubmit = async (e) => {
         password: passwordField.value
     };
 
+    document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Logging in...';
 
     try {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
         const response = await fetch('/api/token/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ username: email, password: password })
         });
 
+        const result = await response.json();
+
         if (response.ok) {
-            const data = await response.json();
-            Auth.saveTokens(data);
+            Auth.saveTokens(result);
             window.location.href = "/";
         } else {
-            // 👈 중앙 집중식 에러 핸들러 호출
-            const errors = await Auth.parseError(response);
-            
+            const errors = result.details || result;
             if (errors.detail) {
-                // 로그인 실패 (ID/PW 틀림 등)
                 showGlobalAlert(errors.detail);
             } else {
-                // 필드별 유효성 검사 에러 (이메일 누락 등)
                 for (const key in errors) {
                     const targetId = (key === 'username') ? 'error-username' : `error-${key}`;
                     const errorEl = document.getElementById(targetId);
-                    if (errorEl) {
-                        errorEl.textContent = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
-                    }
+                    if (errorEl) errorEl.textContent = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
                 }
             }
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Login';
         }
     } catch (error) {
         console.error("Login Error:", error);
-        showGlobalAlert("Failed to connect to the server.");
+        showGlobalAlert("Server connection failed.");
+    } finally {
+        // [FIX] 어떤 경우에도 버튼은 다시 활성화되어야 함
         submitBtn.disabled = false;
         submitBtn.textContent = 'Login';
     }
