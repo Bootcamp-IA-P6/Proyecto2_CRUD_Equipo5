@@ -1,5 +1,31 @@
 // renting/static/renting/js/auth.js
 
+/**
+ * [FIX] 전역 알림 함수 정의 (ReferenceError 방지)
+ */
+window.showGlobalAlert = function(message, type = 'danger') {
+    const container = document.getElementById('global-alert-container');
+    if (!container) {
+        console.error("Alert container not found!");
+        alert(message); // 컨테이너가 없으면 차선책으로 기본 alert 사용
+        return;
+    }
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    `;
+    // 5초 뒤 자동 삭제
+    setTimeout(() => {
+        const alert = container.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 5000);
+};
+
 const Auth = {
     getTokens: () => JSON.parse(localStorage.getItem('tokens')),
     
