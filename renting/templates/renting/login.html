@@ -2,27 +2,50 @@
 {% load static %}
 
 {% block content %}
-<div class="card p-4 mx-auto shadow" style="max-width: 400px; margin-top: 50px;">
-    <h3 class="text-center mb-4">Login</h3>
+<style>
+    /* 배경과 카드를 구분하기 위한 미세한 배경색 주입 */
+    body { background-color: #f4f7f9 !important; }
+    .auth-card {
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border-radius: 1rem;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25 disposable rgba(13, 110, 253, 0.1);
+    }
+</style>
 
-    <!-- Global Error Message Container -->
-    <div id="global-error" class="alert alert-danger d-none mb-3" role="alert"></div>
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-5 col-lg-4">
+        <div class="auth-card p-5">
+            <div class="mb-4">
+                <h3 class="fw-bold text-dark mb-1">Sign In</h3>
+                <p class="text-muted small">Enter your details to access your account.</p>
+            </div>
 
-    <form id="login-form" novalidate>
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input type="email" id="email" class="form-control" placeholder="name@example.com">
-            <div id="error-username" class="text-danger small mt-1"></div>
+            <div id="global-error" class="alert alert-danger d-none py-2 small border-0 mb-4" role="alert"></div>
+
+            <form id="login-form" novalidate>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">EMAIL</label>
+                    <input type="email" id="email" class="form-control py-2 px-3 border-light-subtle bg-light-subtle" placeholder="name@example.com">
+                    <div id="error-username" class="text-danger small mt-1"></div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">PASSWORD</label>
+                    <input type="password" id="password" class="form-control py-2 px-3 border-light-subtle bg-light-subtle" placeholder="••••••••">
+                    <div id="error-password" class="text-danger small mt-1"></div>
+                </div>
+                <button type="submit" class="btn btn-dark w-100 py-2 fw-bold rounded-2 shadow-sm transition-all">Continue</button>
+            </form>
+            
+            <div class="mt-4 pt-3 text-center border-top">
+                <span class="text-muted small">New to the system?</span> 
+                <a href="{% url 'register' %}" class="text-primary fw-bold text-decoration-none small ms-1">Create Account</a>
+            </div>
         </div>
-        <div class="mb-3">
-            <label class="form-label">Password</label>
-            <input type="password" id="password" class="form-control" placeholder="Enter password">
-            <div id="error-password" class="text-danger small mt-1"></div>
-        </div>
-        <button type="submit" class="btn btn-primary w-100 py-2">Login</button>
-    </form>
-    <div class="mt-3 text-center">
-        <small>Don't have an account? <a href="{% url 'register' %}" class="text-decoration-none">Sign up</a></small>
     </div>
 </div>
 
