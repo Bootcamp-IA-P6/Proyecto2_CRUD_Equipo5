@@ -122,7 +122,7 @@ proyecto/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/YOUR_ORG/proyecto.git
+git clone https://github.com/Bootcamp-IA-P6/Proyecto2_CRUD_Equipo5.git
 cd proyecto
 ```
 
@@ -146,7 +146,7 @@ pip install -r requirements.txt
 
 ### MySQL Database Creation
 ```sql
-CREATE DATABASE renting_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE renting_db;
 ```
 
 4. **Configure environment variables**
