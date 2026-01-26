@@ -10,19 +10,18 @@ from .models import (
     CarModel, Car, Reservation
 )
 
+
 class AppUserSerializer(serializers.ModelSerializer):
+    """Serializer for AppUser model operations"""
     class Meta:
         model = AppUser
-        # 1. Agregamos 'password' a la lista de campos para que DRF lo reciba
         fields = ['id', 'first_name', 'last_name', 'email', 'password', 'birth_date', 'license_number']
-        # ✅ write_only asegura que se pueda enviar pero nunca se vea en la respuesta
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        # 2. Usamos .pop con un valor por defecto para evitar el KeyError
+        """Create new user with hashed password"""
         password = validated_data.pop('password', None)
-        # Creamos el usuario (usamos create porque tu modelo no es el User de Django, es el tuyo)
-        user = AppUser.objects.create(**validated_data) 
+        user = AppUser.objects.create(**validated_data)
         
         if password:
             user.set_password(password)
@@ -30,6 +29,7 @@ class AppUserSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
+        """Update user instance with optional password change"""
         password = validated_data.pop('password', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -38,14 +38,14 @@ class AppUserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
 def capitalize_name(name):
-    """Capitaliza cada palabra: 'maria de la cruz' → 'Maria De La Cruz'"""
+    """Capitalize each word: 'maria de la cruz' → 'Maria De La Cruz'"""
     return ' '.join(word.capitalize() for word in name.split())
 
+
 class AppUserSignupSerializer(serializers.ModelSerializer):
-    """
-    Issue #55 - Strict Signup Validation (solo para CREATE)
-    """
+    """Strict signup validation serializer (Issue #55)"""
     
     class Meta:
         model = AppUser
@@ -53,17 +53,17 @@ class AppUserSignupSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
     
     def validate_first_name(self, value):
-        """No numbers, no special chars, Capitalized"""
+        """Validate: no numbers, no special chars, capitalized"""
         if not value or not value.strip():
             raise serializers.ValidationError("First name is required.")
         
         if not re.match(r'^[a-zA-Z\sáéíóúñÁÉÍÓÚÑ]+$', value):
             raise serializers.ValidationError("First name can only contain letters and spaces.")
         
-        return capitalize_name(value.strip())  # ✅ Función personalizada
+        return capitalize_name(value.strip())
     
     def validate_last_name(self, value):
-        """Igual que first_name"""
+        """Same validation as first_name"""
         if not value or not value.strip():
             raise serializers.ValidationError("Last name is required.")
         
@@ -73,7 +73,7 @@ class AppUserSignupSerializer(serializers.ModelSerializer):
         return capitalize_name(value.strip())
     
     def validate_email(self, value):
-        """Valid format + unique"""
+        """Validate format and uniqueness"""
         if AppUser.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("This email is already registered.")
         
@@ -83,7 +83,7 @@ class AppUserSignupSerializer(serializers.ModelSerializer):
         return value.lower().strip()
     
     def validate_password(self, value):
-        """8+ chars, upper, lower, number, special, no emojis"""
+        """Validate: 8+ chars, upper, lower, number, special char"""
         if len(value) < 8:
             raise serializers.ValidationError("Password must be at least 8 characters.")
         
@@ -99,7 +99,7 @@ class AppUserSignupSerializer(serializers.ModelSerializer):
         return value
     
     def validate_birth_date(self, value):
-        """>= 18 años, no futuro"""
+        """Validate: >= 18 years old, not in future"""
         today = date.today()
         if value > today:
             raise serializers.ValidationError("Birth date cannot be in the future.")
@@ -111,43 +111,49 @@ class AppUserSignupSerializer(serializers.ModelSerializer):
         return value
     
     def create(self, validated_data):
-        """Hashear password"""
+        """Create user with hashed password"""
         password = validated_data.pop('password')
         validated_data['password'] = make_password(password)
         return super().create(validated_data)
 
 
 class VehicleTypeSerializer(serializers.ModelSerializer):
+    """Serializer for VehicleType model"""
     class Meta:
         model = VehicleType
         fields = '__all__'
 
 
 class BrandSerializer(serializers.ModelSerializer):
+    """Serializer for Brand model"""
     class Meta:
         model = Brand
         fields = '__all__'
 
 
 class FuelTypeSerializer(serializers.ModelSerializer):
+    """Serializer for FuelType model"""
     class Meta:
         model = FuelType
         fields = '__all__'
 
 
 class ColorSerializer(serializers.ModelSerializer):
+    """Serializer for Color model"""
     class Meta:
         model = Color
         fields = '__all__'
 
 
 class TransmissionSerializer(serializers.ModelSerializer):
+    """Serializer for Transmission model"""
     class Meta:
         model = Transmission
         fields = '__all__'
 
 
 class CarModelSerializer(serializers.ModelSerializer):
+    """Serializer for CarModel with nested related data"""
     brand_name = serializers.CharField(source='brand.name', read_only=True)
     vehicle_type_name = serializers.CharField(source='vehicle_type.name', read_only=True)
     fuel_type_name = serializers.CharField(source='fuel_type.name', read_only=True)
@@ -157,27 +163,26 @@ class CarModelSerializer(serializers.ModelSerializer):
         model = CarModel
         fields = '__all__'
 
-
-    # VALIDACIÓN: El precio no puede ser negativo
     def validate_daily_price(self, value):
+        """Validate daily price is positive"""
         if value < 0:
-            raise serializers.ValidationError("El precio diario no puede ser negativo.")
+            raise serializers.ValidationError("Daily price cannot be negative.")
         return value
 
 
 class CarSerializer(serializers.ModelSerializer):
+    """Serializer for Car with nested model details"""
     car_model_name = serializers.CharField(source='car_model.model_name', read_only=True)
     brand_name = serializers.CharField(source='car_model.brand.name', read_only=True)
     color_name = serializers.CharField(source='color.name', read_only=True)
     car_model_image = serializers.ImageField(source='car_model.image', read_only=True)
-
-    # -- added for frontend -- # 
+    
+    # Added for frontend compatibility
     daily_price = serializers.ReadOnlyField(source='car_model.daily_price')
     seats = serializers.ReadOnlyField(source='car_model.seats')
     transmission_name = serializers.ReadOnlyField(source='car_model.transmission.name')
     fuel_type_name = serializers.ReadOnlyField(source='car_model.fuel_type.name')
     vehicle_type_name = serializers.ReadOnlyField(source='car_model.vehicle_type.name')
-
 
     class Meta:
         model = Car
@@ -188,12 +193,8 @@ class CarSerializer(serializers.ModelSerializer):
         ]
 
 
-from rest_framework import serializers
-from django.utils import timezone
-from datetime import timedelta
-from .models import Reservation
-
 class ReservationSerializer(serializers.ModelSerializer):
+    """Serializer for Reservation with nested user/car data"""
     user_name = serializers.CharField(source='user.first_name', read_only=True)
     car_license = serializers.CharField(source='car.license_plate', read_only=True)
     model_name = serializers.CharField(source='car.car_model.model_name', read_only=True)
@@ -206,20 +207,20 @@ class ReservationSerializer(serializers.ModelSerializer):
             'user_name', 'car_license', 'model_name'
         ]
         read_only_fields = ['user', 'coverage', 'rate', 'total_price']
-        extra_kwargs = {
-            'user': {'read_only': True},
-        }
+        extra_kwargs = {'user': {'read_only': True}}
 
     def validate_start_date(self, value):
-        """#59: start_date cannot be in the past"""
-        if value < timezone.now().date():
-            raise serializers.ValidationError("La fecha de inicio no puede ser en el pasado.")
+        """Start date cannot be in the past (Issue #59)"""
+        if value < date.today():
+            raise serializers.ValidationError("Start date cannot be in the past.")
         return value
 
     def validate(self, attrs):
+        """Object-level validation for dates and overlaps"""
         request = self.context.get('request')
         user = request.user if request else None
         instance = getattr(self, 'instance', None)
+        
         if instance:
             for attr, value in attrs.items():
                 setattr(instance, attr, value)
@@ -231,18 +232,18 @@ class ReservationSerializer(serializers.ModelSerializer):
         except ValidationError as e:
             raise serializers.ValidationError(e.message_dict)
 
-        # 🔴 NUEVO #59: Validaciones de fechas
+        # Date validations (Issue #59)
         start_date = attrs['start_date']
         end_date = attrs['end_date']
         car = attrs['car']
 
-        # end_date > start_date
+        # end_date must be after start_date
         if end_date <= start_date:
             raise serializers.ValidationError(
-                "La fecha de fin debe ser posterior a la fecha de inicio."
+                "End date must be after start date."
             )
 
-        # NO SOLAPAMIENTO - Query eficiente
+        # Check for overlapping reservations
         overlapping = Reservation.objects.filter(
             car=car,
             start_date__lt=end_date,
@@ -251,26 +252,29 @@ class ReservationSerializer(serializers.ModelSerializer):
         
         if overlapping.exists():
             raise serializers.ValidationError(
-                "El vehículo ya está reservado en esas fechas."
+                "Vehicle is already reserved for these dates."
             )
 
         return attrs
 
     def validate_total_price(self, value):
+        """Total price must be positive"""
         if value is not None and value <= 0:
-            raise serializers.ValidationError("El precio total debe ser mayor que cero.")
+            raise serializers.ValidationError("Total price must be greater than zero.")
         return value 
 
 
 class MyTokenObtainPairSerializer(serializers.Serializer):
-    username = serializers.EmailField(required=True)  # ← required=True
-    password = serializers.CharField(write_only=True, required=True)  # ← required=True
+    """Custom JWT token serializer with email field"""
+    username = serializers.EmailField(required=True)
+    password = serializers.CharField(write_only=True, required=True)
 
     def validate(self, attrs):
+        """Validate credentials and return JWT tokens"""
         email = attrs.get("username")
         password = attrs.get("password")
 
-        # 1. Validación campos requeridos
+        # Validate required fields
         errors = {}
         if not email:
             errors["username"] = ["Email is required."]
@@ -280,30 +284,25 @@ class MyTokenObtainPairSerializer(serializers.Serializer):
         if errors:
             raise serializers.ValidationError(errors)
 
-        # 2. Normalizar email
+        # Normalize email
         email = email.strip().lower()
 
-        # 3. Credenciales SIN filtrar info sensible
+        # Authenticate without leaking info
         try:
             user = AppUser.objects.get(email=email)
         except AppUser.DoesNotExist:
-            # SIEMPRE misma respuesta (no dice si existe o no)
             raise serializers.ValidationError({
                 "detail": "Invalid credentials."
             })
 
         if not user.check_password(password):
-            # Misma respuesta que arriba
             raise serializers.ValidationError({
                 "detail": "Invalid credentials."
             })
 
-        # 4. Éxito → tokens
+        # Generate tokens
         refresh = RefreshToken.for_user(user)
         return {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
-
-
-# temp change to trigger git

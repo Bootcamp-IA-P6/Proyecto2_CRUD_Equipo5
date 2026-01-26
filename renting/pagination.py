@@ -1,9 +1,10 @@
 from rest_framework.pagination import PageNumberPagination
 
+
 class StandardResultsSetPagination(PageNumberPagination):
     """
-    Clase personalizada para manejar la paginación.
-    Permite al cliente usar ?page_size=X para cambiar la cantidad de resultados.
+    Custom pagination class supporting dynamic page size.
+    Allows ?page_size=X parameter to control results per page.
     """
     page_size = 10
     page_size_query_param = 'page_size'

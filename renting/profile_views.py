@@ -5,67 +5,55 @@ from rest_framework import status
 from .serializers import AppUserSerializer
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 
 class ProfileView(APIView):
     """
-    Endpoint para gestionar el perfil del usuario actual
+    Profile management endpoint for authenticated users.
     GET/PUT/PATCH/DELETE /api/profile/me/
     
-    IMPORTANTE: Todas las modificaciones (PUT/PATCH/DELETE) requieren 
-    confirmación de contraseña según criterios de aceptación del Issue #62
+    All modifications (PUT/PATCH/DELETE) require current password confirmation (Issue #62).
     """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        """
-        GET /api/profile/me/ 
-        Ver perfil propio (no requiere contraseña)
-        """
+        """Retrieve current user's profile (no password required)"""
         serializer = AppUserSerializer(request.user)
         return Response(serializer.data)
     
     def put(self, request):
-        """
-        PUT /api/profile/me/ 
-        Actualizar perfil completo (REQUIERE current_password)
-        """
+        """Update full profile (requires current_password)"""
         return self._update(request, partial=False)
     
     def patch(self, request):
-        """
-        PATCH /api/profile/me/ 
-        Actualizar perfil parcial (REQUIERE current_password)
-        """
+        """Update partial profile (requires current_password)"""
         return self._update(request, partial=True)
     
     def _update(self, request, partial):
-        """
-        Lógica común de actualización
-        Issue #62: Todas las modificaciones requieren current_password
-        """
+        """Common update logic with password verification (Issue #62)"""
         current_password = request.data.get('current_password')
         
-        # Validar que se proporcione la contraseña actual
+        # Validate current password is provided
         if not current_password:
             return Response(
                 {"error": "current_password is required to update profile"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Verificar que la contraseña sea correcta
+        # Verify current password is correct
         if not request.user.check_password(current_password):
             return Response(
                 {"error": "Invalid current password"},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Crear una copia de los datos sin current_password
+        # Remove current_password from data for serialization
         data = request.data.copy()
         data.pop('current_password')
         
-        # Validar y guardar
+        # Validate and save
         serializer = AppUserSerializer(
             request.user, 
             data=data, 
@@ -77,10 +65,7 @@ class ProfileView(APIView):
         return Response(serializer.data)
     
     def delete(self, request):
-        """
-        DELETE /api/profile/me/ 
-        Eliminar cuenta propia (REQUIERE password)
-        """
+        """Delete user account (requires password confirmation)"""
         password = request.data.get('password')
         
         if not password:
@@ -106,10 +91,10 @@ class ProfileView(APIView):
 
 class ChangePasswordView(APIView):
     """
+    Change current user password.
     POST /api/profile/me/change-password/
-    Cambiar contraseña del usuario actual
     
-    Validación: Mínimo 8 caracteres (según Issue #62)
+    Requires minimum 8 characters (Issue #62).
     """
     permission_classes = [IsAuthenticated]
     
@@ -129,7 +114,7 @@ class ChangePasswordView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Validación: mínimo 8 caracteres
+        # Validate minimum 8 characters
         if len(new_password) < 8:
             return Response(
                 {"error": "New password must be at least 8 characters long"},
