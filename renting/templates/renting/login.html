@@ -3,28 +3,35 @@
 
 {% block content %}
 <div class="card p-4 mx-auto shadow" style="max-width: 400px; margin-top: 50px;">
+    <!-- Page Title -->
     <h3 class="text-center mb-4">Login</h3>
 
     <!-- Global Error Message Container -->
     <div id="global-error" class="alert alert-danger d-none mb-3" role="alert"></div>
 
+    <!-- Login Form -->
     <form id="login-form" novalidate>
+        <!-- Email Field -->
         <div class="mb-3">
             <label class="form-label">Email</label>
             <input type="email" id="email" class="form-control" placeholder="name@example.com">
             <div id="error-username" class="text-danger small mt-1"></div>
         </div>
+        <!-- Password Field -->
         <div class="mb-3">
             <label class="form-label">Password</label>
             <input type="password" id="password" class="form-control" placeholder="Enter password">
             <div id="error-password" class="text-danger small mt-1"></div>
         </div>
+        <!-- Submit Button -->
         <button type="submit" class="btn btn-primary w-100 py-2">Login</button>
     </form>
+    <!-- Registration Link -->
     <div class="mt-3 text-center">
         <small>Don't have an account? <a href="{% url 'register' %}" class="text-decoration-none">Sign up</a></small>
     </div>
 </div>
 
+<!-- Login Form JavaScript -->
 <script src="{% static 'renting/js/login.js' %}"></script>
 {% endblock %}

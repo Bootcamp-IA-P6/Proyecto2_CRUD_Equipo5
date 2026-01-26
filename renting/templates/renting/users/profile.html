@@ -4,14 +4,14 @@
 {% block content %}
 <div class="row justify-content-center py-4">
     <div class="col-lg-8">
-        <!-- 1. Profile Info & Edit -->
+        <!-- Profile Information & Edit Section -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
                 <h4 class="fw-bold mb-0">My Profile</h4>
                 <button id="edit-mode-btn" class="btn btn-outline-primary btn-sm" onclick="toggleEditMode(true)">Edit Profile</button>
             </div>
 
-            <!-- ⚠️ 프로필 전용 로컬 메시지 박스 -->
+            <!-- Profile-specific local message container -->
             <div id="profile-msg-container" class="px-4 mt-2"></div>
 
             <div class="card-body p-4">
@@ -52,13 +52,13 @@
             </div>
         </div>
 
-        <!-- 2. Security (Password Change) -->
+        <!-- Security Section (Password Change) -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0 pt-4 px-4">
                 <h4 class="fw-bold mb-0">Security</h4>
             </div>
             
-            <!-- ⚠️ 비밀번호 전용 로컬 메시지 박스 -->
+            <!-- Password-specific local message container -->
             <div id="password-msg-container" class="px-4 mt-2"></div>
 
             <div class="card-body p-4">
@@ -83,12 +83,13 @@
             </div>
         </div>
 
-        <!-- 3. Danger Zone (Account Deletion) -->
+        <!-- Danger Zone (Account Deletion) - Commented Out -->
         <!-- <div class="mt-5 pt-4 border-top">
             <button class="btn btn-outline-danger btn-sm" onclick="confirmDeleteAccount()">Delete My Account</button>
         </div> -->
     </div>
 </div>
 
+<!-- Profile JavaScript -->
 <script src="{% static 'renting/js/profile.js' %}"></script>
 {% endblock %}
