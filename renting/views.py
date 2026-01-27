@@ -1,15 +1,15 @@
 import logging
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
-from .filters import CarFilter, ReservationFilter
 from rest_framework_simplejwt.tokens import RefreshToken
+from .filters import CarFilter, ReservationFilter
 from .filters import CarFilter, ReservationFilter
 from .permissions import IsReservationOwnerOrStaff, IsStaffPermission, IsStaffOrReadOnlyPermission 
 from .models import (
@@ -46,6 +46,7 @@ def car_list(request):
     return render(request, 'renting/cars/list.html')
 
 
+@login_required
 def reservation_list(request):
     """Render reservation list page"""
     return render(request, 'renting/reservations/list.html')
@@ -56,6 +57,7 @@ def car_detail(request, id):
     return render(request, 'renting/cars/detail.html', {'car_id': id})
 
 
+@login_required
 def profile_view(request):
     """Render user profile page"""
     return render(request, 'renting/users/profile.html')
@@ -76,6 +78,7 @@ def register_view(request):
     return render(request, 'renting/register.html')
 
 
+@login_required
 def reservation_create(request):
     """Render reservation creation page"""
     return render(request, 'renting/reservations/create.html')
