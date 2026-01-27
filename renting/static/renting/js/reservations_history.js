@@ -169,7 +169,16 @@ const delModal = new bootstrap.Modal(document.getElementById('deleteModal'));
 function openDeleteModal(id) {
     targetDeleteId = id;
     document.getElementById('delete-confirm-pass').value = '';
-    delModal.show();
+
+    const drawerEl = document.getElementById('resDetailDrawer');
+    const drawerInstance = bootstrap.Offcanvas.getInstance(drawerEl);
+    if (drawerInstance) {
+        drawerInstance.hide();
+    }
+
+    setTimeout(() => {
+        delModal.show();
+    }, 150); 
 }
 
 /**
