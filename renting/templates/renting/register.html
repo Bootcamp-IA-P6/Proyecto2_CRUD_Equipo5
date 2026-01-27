@@ -26,45 +26,46 @@
             <form id="register-form" novalidate>
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">FIRST NAME</label>
+                        <label class="form-label small fw-bold">FIRST NAME <span class="text-danger">*</span></label>
                         <input type="text" id="reg-fname" class="form-control py-2 border-light-subtle">
                         <div id="error-first_name" class="text-danger small mt-1"></div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">LAST NAME</label>
+                        <label class="form-label small fw-bold">LAST NAME <span class="text-danger">*</span></label>
                         <input type="text" id="reg-lname" class="form-control py-2 border-light-subtle">
                         <div id="error-last_name" class="text-danger small mt-1"></div>
                     </div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label small fw-bold">EMAIL ADDRESS</label>
+                    <label class="form-label small fw-bold">EMAIL ADDRESS <span class="text-danger">*</span></label>
                     <input type="email" id="reg-email" class="form-control py-2 border-light-subtle" placeholder="you@example.com">
                     <div id="error-email" class="text-danger small mt-1"></div>
                 </div>
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">PASSWORD</label>
+                        <label class="form-label small fw-bold">PASSWORD <span class="text-danger">*</span></label>
                         <input type="password" id="reg-pass" class="form-control py-2 border-light-subtle">
                         <div id="error-password" class="text-danger small mt-1"></div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold text-primary">CONFIRM PASSWORD</label>
-                        <input type="password" id="reg-pass-confirm" class="form-control py-2 border-primary-subtle">
+                        <!-- [FIX] Removed text-primary and border-primary-subtle for consistency -->
+                        <label class="form-label small fw-bold">CONFIRM PASSWORD <span class="text-danger">*</span></label>
+                        <input type="password" id="reg-pass-confirm" class="form-control py-2 border-light-subtle">
                         <div id="error-password_confirm" class="text-danger small mt-1"></div>
                     </div>
                 </div>
 
                 <div class="row g-3 mb-5">
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">BIRTH DATE</label>
+                        <label class="form-label small fw-bold">BIRTH DATE <span class="text-danger">*</span></label>
                         <input type="date" id="reg-bdate" class="form-control py-2 border-light-subtle">
                         <div id="error-birth_date" class="text-danger small mt-1"></div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small fw-bold">LICENSE NUMBER</label>
-                        <input type="text" id="reg-license" class="form-control py-2 border-light-subtle" placeholder="12345678A">
+                        <input type="text" id="reg-license" class="form-control py-2 border-light-subtle" placeholder="e.g.12345678A">
                         <div id="error-license_number" class="text-danger small mt-1"></div>
                     </div>
                 </div>
