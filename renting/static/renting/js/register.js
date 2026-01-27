@@ -4,11 +4,12 @@
  * Clear all form errors and status messages
  */
 function clearErrors() {
-    const form = document.getElementById('res-create-form');
+    const form = document.getElementById('register-form');
     if (form) {
         form.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
     }
-    document.getElementById('form-status').classList.add('d-none');
+    const status = document.getElementById('form-status');
+    if (status) status.classList.add('d-none');
 }
 
 /**
@@ -19,11 +20,11 @@ function validateFrontend(data, passConfirm) {
 
     // Names: letters only (matches backend regex)
     const nameRegex = /^[a-zA-Z\sáéíóúñÁÉÍÓÚÑ]+$/;
-    if (!nameRegex.test(data.first_name)) {
+    if (!data.first_name || !nameRegex.test(data.first_name)) {
         document.getElementById('error-first_name').innerText = "Names can only contain letters.";
         isValid = false;
     }
-    if (!nameRegex.test(data.last_name)) {
+    if (!data.last_name || !nameRegex.test(data.last_name)) {
         document.getElementById('error-last_name').innerText = "Names can only contain letters.";
         isValid = false;
     }
@@ -49,13 +50,16 @@ function validateFrontend(data, passConfirm) {
     }
 
     // Age validation (18+ years)
-    if (data.birth_date) {
+    if (!data.birth_date) {
+        document.getElementById('error-birth_date').innerText = "Birth date is required.";
+        isValid = false;
+    } else {
         const birth = new Date(data.birth_date);
         const today = new Date();
         let age = today.getFullYear() - birth.getFullYear();
         if (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) age--;
         if (age < 18) {
-            document.getElementById('error-birth_date').innerText = "Must be at least 18 years old.";
+            document.getElementById('error-birth_date').innerText = "You must be at least 18 years old.";
             isValid = false;
         }
     }
@@ -77,7 +81,7 @@ document.getElementById('register-form').onsubmit = async (e) => {
         email: document.getElementById('reg-email').value,
         password: document.getElementById('reg-pass').value,
         birth_date: document.getElementById('reg-bdate').value,
-        license_number: document.getElementById('reg-license').value
+        license_number: document.getElementById('reg-license').value.trim()
     };
     const passConfirm = document.getElementById('reg-pass-confirm').value;
 
@@ -85,7 +89,9 @@ document.getElementById('register-form').onsubmit = async (e) => {
     if (!validateFrontend(payload, passConfirm)) return;
 
     const btn = document.getElementById('submit-btn');
+    const originalBtnText = btn.textContent;
     btn.disabled = true;
+    btn.textContent = "Creating Account...";
 
     try {
         // Submit to user creation API endpoint
@@ -98,9 +104,12 @@ document.getElementById('register-form').onsubmit = async (e) => {
         const result = await response.json();
 
         if (response.ok) {
-            alert("Registration Success!");
             // Redirect to login page
-            window.location.href = "/login/"; 
+            if (window.redirectWithMsg) {
+                window.redirectWithMsg("/login/", "Account created successfully! Please sign in.", "success");
+            } else {
+                window.location.href = "/login/";
+            }
         } else {
             // Display backend validation errors
             const errors = result.details || result;
@@ -111,10 +120,15 @@ document.getElementById('register-form').onsubmit = async (e) => {
                 }
             }
             btn.disabled = false;
+            btn.textContent = originalBtnText;
         }
     } catch (error) {
         console.error(error);
-        alert("Server communication error.");
+        const status = document.getElementById('form-status');
+        status.innerText = "Connection error. Please try again.";
+        status.classList.remove('d-none', 'alert-success');
+        status.classList.add('alert-danger');
         btn.disabled = false;
+        btn.textContent = originalBtnText;
     }
 };
