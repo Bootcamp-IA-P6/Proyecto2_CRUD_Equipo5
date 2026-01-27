@@ -20,7 +20,7 @@ class CarFilter(filters.FilterSet):
     max_price = filters.NumberFilter(field_name="car_model__daily_price", lookup_expr='lte')
     
     # Detailed spec filters
-    seats = filters.NumberFilter(field_name="car_model__seats")
+    seats = filters.NumberFilter(field_name="car_model__seats", lookup_expr='gte')
     transmission = filters.CharFilter(field_name="car_model__transmission__name")
     fuel = filters.CharFilter(field_name="car_model__fuel_type__name")
     
