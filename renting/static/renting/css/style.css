@@ -291,3 +291,13 @@
     font-size: 0.7rem;
     padding: 0.5em 1em;
 }
+
+/* 취소 확인 모달을 모든 것보다 앞으로 */
+.modal {
+    z-index: 2000 !important;
+}
+
+/* 모달 뒤의 어두운 배경(backdrop)도 같이 앞으로 */
+.modal-backdrop {
+    z-index: 1999 !important;
+}
