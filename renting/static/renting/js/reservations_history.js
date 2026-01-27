@@ -5,13 +5,24 @@ let currentTab = 'upcoming';
 /**
  * Load user's reservations based on current tab (upcoming/past)
  */
-async function loadMyReservations() {
-    const res = await fetchWithAuth(`/api/reservations/my/?status=${currentTab}`);
-    if (!res || !res.ok) return;
+async function loadMyReservations(url = null) {
+    const fetchUrl = url || `/api/reservations/my/?status=${currentTab}`;
+    
+    const container = document.getElementById('my-res-container');
+    const paginationContainer = document.getElementById('pagination-container');
+    
+    // loading...
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>';
+    paginationContainer.innerHTML = '';
+
+    const res = await fetchWithAuth(fetchUrl);
+    if (!res || !res.ok) {
+        container.innerHTML = '<p class="text-center py-5 text-danger">Failed to load reservations.</p>';
+        return;
+    }
 
     const data = await res.json();
     const items = data.results || data;
-    const container = document.getElementById('my-res-container');
     
     if (items.length === 0) {
         container.innerHTML = `<div class="text-center py-5 bg-white rounded-4 border border-dashed"><p class="text-muted mb-0">No ${currentTab} reservations found.</p></div>`;
@@ -37,6 +48,32 @@ async function loadMyReservations() {
             </div>
         </div>
     `).join('');
+
+    renderPagination(data);
+}
+
+/**
+ * Render pagination buttons based on API response
+ */
+function renderPagination(data) {
+    const container = document.getElementById('pagination-container');
+    if (!data.next && !data.previous) return; // 페이지가 하나뿐이면 표시 안 함
+
+    let html = '';
+    
+    if (data.previous) {
+        html += `<button class="btn btn-outline-primary px-4 shadow-sm" onclick="loadMyReservations('${data.previous}')">
+                    <i class="bi bi-arrow-left"></i> Previous
+                 </button>`;
+    }
+    
+    if (data.next) {
+        html += `<button class="btn btn-outline-primary px-4 shadow-sm" onclick="loadMyReservations('${data.next}')">
+                    Next <i class="bi bi-arrow-right"></i>
+                 </button>`;
+    }
+    
+    container.innerHTML = html;
 }
 
 /**
@@ -113,6 +150,9 @@ async function openReservationDetail(id) {
     `;
 }
 
+/**
+ * Switch between upcoming and past tabs (Resets pagination)
+ */
 function switchTab(status, btn) {
     currentTab = status;
     document.querySelectorAll('.res-tab-btn').forEach(el => el.classList.remove('active'));
@@ -186,4 +226,6 @@ document.getElementById('final-delete-btn').onclick = async () => {
 };
 
 // Load reservations on page load
-document.addEventListener('DOMContentLoaded', loadMyReservations);
+document.addEventListener('DOMContentLoaded', () => {
+    loadMyReservations();
+});
