@@ -27,8 +27,8 @@ function getFilterParams() {
     const seats = document.getElementById('filter-seats').value;
 
     if (type) params.append('car_model__vehicle_type', type);
-    if (trans) params.append('car_model__transmission__name', trans); // 명칭으로 필터링
-    if (seats) params.append('car_model__seats', seats);
+    if (trans) params.append('transmission', trans);
+    if (seats) params.append('seats', seats); 
 
     return params.toString();
 }
