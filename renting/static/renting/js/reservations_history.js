@@ -92,12 +92,24 @@ async function openReservationDetail(id) {
     }
 
     const r = await res.json();
+    console.log("Full API Response for Reservation:", r); 
+
+        // ✅ [정밀 수정] 브랜드명과 모델명의 공백을 언더바(_)로 치환
+    // 예: "Peak Black" -> "Peak_Black"
+    const brandNameClean = (r.brand_name || '').replace(/\s+/g, '_');
+    const modelNameClean = (r.model_name || '').replace(/\s+/g, '_');
+
+    // ✅ [최종 파일명 생성] 브랜드_모델.jpg
+    // 만약 모델명 자체에 이미 언더바가 있다면(예: Orbit_Black), 그대로 유지됩니다.
+    const imageUrl = `/media/car_models/${brandNameClean}_${modelNameClean}.jpg`;
+
+    console.log("Attempting to load image:", imageUrl);
     
     // Generate image filename (same logic as car_detail.js)
     // Use car_model_image if available, otherwise generate fallback
     const brandLow = r.brand_name ? r.brand_name.toLowerCase().replace(/\s/g, '_') : 'brand';
     const modelLow = r.model_name.toLowerCase().replace(/\s/g, '_');
-    const imageUrl = r.car_model_image || `/static/renting/images/cars/${brandLow}_${modelLow}_1.jpg`;
+    // const imageUrl = r.car_model_image || `/static/renting/images/cars/${brandLow}_${modelLow}_1.jpg`;
 
     content.innerHTML = `
         <div class="p-0">

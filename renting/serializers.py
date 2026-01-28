@@ -198,13 +198,17 @@ class ReservationSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.first_name', read_only=True)
     car_license = serializers.CharField(source='car.license_plate', read_only=True)
     model_name = serializers.CharField(source='car.car_model.model_name', read_only=True)
+    brand_name = serializers.CharField(source='car.car_model.brand.name', read_only=True)
+    car_model_image = serializers.ImageField(source='car.car_model.car_model_image', read_only=True)
+
 
     class Meta:
         model = Reservation
         fields = [
             'id', 'start_date', 'end_date', 'coverage', 'rate', 
             'total_price', 'user', 'car', 
-            'user_name', 'car_license', 'model_name'
+            'user_name', 'car_license', 'model_name', 'brand_name',
+            'car_model_image'
         ]
         read_only_fields = ['user', 'coverage', 'rate', 'total_price']
         extra_kwargs = {'user': {'read_only': True}}
